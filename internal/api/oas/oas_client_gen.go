@@ -73,7 +73,7 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 //
 // Returns a single user.
 //
-// GET /v1/user/{id}
+// GET /v1/users/{id}
 func (c *Client) V1GetUserByID(ctx context.Context, params V1GetUserByIDParams) (V1GetUserByIDRes, error) {
 	res, err := c.sendV1GetUserByID(ctx, params)
 	_ = res
@@ -84,7 +84,7 @@ func (c *Client) sendV1GetUserByID(ctx context.Context, params V1GetUserByIDPara
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("v1_Get_User_By_ID"),
 		semconv.HTTPMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/v1/user/{id}"),
+		semconv.HTTPRouteKey.String("/v1/users/{id}"),
 	}
 
 	// Run stopwatch.
@@ -117,7 +117,7 @@ func (c *Client) sendV1GetUserByID(ctx context.Context, params V1GetUserByIDPara
 	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [2]string
-	pathParts[0] = "/v1/user/"
+	pathParts[0] = "/v1/users/"
 	{
 		// Encode "id" parameter.
 		e := uri.NewPathEncoder(uri.PathEncoderConfig{
@@ -153,6 +153,79 @@ func (c *Client) sendV1GetUserByID(ctx context.Context, params V1GetUserByIDPara
 
 	stage = "DecodeResponse"
 	result, err := decodeV1GetUserByIDResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// V1GetUserList invokes v1_Get_User_List operation.
+//
+// Returns a single user.
+//
+// GET /v1/users
+func (c *Client) V1GetUserList(ctx context.Context) (V1GetUserListRes, error) {
+	res, err := c.sendV1GetUserList(ctx)
+	_ = res
+	return res, err
+}
+
+func (c *Client) sendV1GetUserList(ctx context.Context) (res V1GetUserListRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("v1_Get_User_List"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/v1/users"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "V1GetUserList",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/v1/users"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeV1GetUserListResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

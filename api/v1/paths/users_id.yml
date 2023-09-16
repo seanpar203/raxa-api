@@ -1,6 +1,6 @@
 get:
   tags:
-    - pet
+    - users
   summary: Get user by ID
   description: Returns a single user
   operationId: v1_Get_User_By_ID

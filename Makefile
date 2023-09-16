@@ -6,6 +6,9 @@ pg:
 gen:
 	go generate
 
+runserver:
+	go run main.go server
+
 migration:
 	@migrate create -ext sql -dir migrations -seq $(filter-out $@,$(MAKECMDGOALS))
 

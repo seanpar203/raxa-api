@@ -2,52 +2,6 @@
 
 package oas
 
-// NewOptInt64 returns new OptInt64 with value set to v.
-func NewOptInt64(v int64) OptInt64 {
-	return OptInt64{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptInt64 is optional int64.
-type OptInt64 struct {
-	Value int64
-	Set   bool
-}
-
-// IsSet returns true if OptInt64 was set.
-func (o OptInt64) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptInt64) Reset() {
-	var v int64
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptInt64) SetTo(v int64) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptInt64) Get() (v int64, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptInt64) Or(d int64) int64 {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
 // NewOptString returns new OptString with value set to v.
 func NewOptString(v string) OptString {
 	return OptString{
@@ -111,15 +65,36 @@ func (s *V1GetUserByIDDef) SetStatusCode(val int) {
 
 func (*V1GetUserByIDDef) v1GetUserByIDRes() {}
 
+// V1GetUserListDef is default response for V1GetUserList operation.
+type V1GetUserListDef struct {
+	StatusCode int
+}
+
+// GetStatusCode returns the value of StatusCode.
+func (s *V1GetUserListDef) GetStatusCode() int {
+	return s.StatusCode
+}
+
+// SetStatusCode sets the value of StatusCode.
+func (s *V1GetUserListDef) SetStatusCode(val int) {
+	s.StatusCode = val
+}
+
+func (*V1GetUserListDef) v1GetUserListRes() {}
+
+type V1GetUserListOKApplicationJSON []V1User
+
+func (*V1GetUserListOKApplicationJSON) v1GetUserListRes() {}
+
 // Ref: #
 type V1User struct {
-	ID        OptInt64  `json:"id"`
+	ID        OptString `json:"id"`
 	Name      OptString `json:"name"`
-	PhotoUrls []string  `json:"photoUrls"`
+	PhotoUrls []string  `json:"photo_urls"`
 }
 
 // GetID returns the value of ID.
-func (s *V1User) GetID() OptInt64 {
+func (s *V1User) GetID() OptString {
 	return s.ID
 }
 
@@ -134,7 +109,7 @@ func (s *V1User) GetPhotoUrls() []string {
 }
 
 // SetID sets the value of ID.
-func (s *V1User) SetID(val OptInt64) {
+func (s *V1User) SetID(val OptString) {
 	s.ID = val
 }
 

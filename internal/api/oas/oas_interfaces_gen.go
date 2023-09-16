@@ -4,3 +4,7 @@ package oas
 type V1GetUserByIDRes interface {
 	v1GetUserByIDRes()
 }
+
+type V1GetUserListRes interface {
+	v1GetUserListRes()
+}

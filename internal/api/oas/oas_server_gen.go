@@ -12,8 +12,14 @@ type Handler interface {
 	//
 	// Returns a single user.
 	//
-	// GET /v1/user/{id}
+	// GET /v1/users/{id}
 	V1GetUserByID(ctx context.Context, params V1GetUserByIDParams) (V1GetUserByIDRes, error)
+	// V1GetUserList implements v1_Get_User_List operation.
+	//
+	// Returns a single user.
+	//
+	// GET /v1/users
+	V1GetUserList(ctx context.Context) (V1GetUserListRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

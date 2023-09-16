@@ -14,11 +14,31 @@ import (
 	"github.com/seanpar203/go-api/internal/db"
 )
 
-// dbMigrateUpCmd represents the dbMigrateUp command
+var forceFlag = "force"
+var versionFlag = "version"
+
+// up represents the migrate up command
 var dbMigrateUpCmd = &cobra.Command{
 	Use:   "up",
 	Short: "Migrates the database all the way to the latest state.",
 	Run: func(cmd *cobra.Command, args []string) {
+
+		force, err := cmd.Flags().GetBool(forceFlag)
+
+		if err != nil {
+			log.Panic().Msg(err.Error())
+		}
+
+		version, err := cmd.Flags().GetInt(versionFlag)
+
+		if err != nil {
+			log.Panic().Msg(err.Error())
+		}
+
+		if force && version == 0 {
+			log.Panic().Msg("You must specify a version to force")
+		}
+
 		db, err := db.Postgres()
 
 		if err != nil {
@@ -37,15 +57,21 @@ var dbMigrateUpCmd = &cobra.Command{
 			log.Panic().Msg(err.Error())
 		}
 
-		err = m.Up()
+		if force {
+			if err := m.Force(version); err != nil {
+				log.Panic().Msg(err.Error())
+				return
+			}
+		}
 
-		if err != nil {
+		if err := m.Up(); err != nil {
 			switch err {
 			case migrate.ErrNoChange:
 				log.Info().Msg("No changes to migrate")
 				return
 			default:
 				log.Panic().Msg(err.Error())
+				return
 			}
 		}
 
@@ -54,6 +80,8 @@ var dbMigrateUpCmd = &cobra.Command{
 }
 
 func init() {
-	migrateCmd.AddCommand(dbMigrateUpCmd)
+	dbMigrateUpCmd.Flags().BoolP(forceFlag, "f", false, "Force the migration")
+	dbMigrateUpCmd.Flags().IntP(versionFlag, "v", 0, "The version of the migration to force.")
 
+	migrateCmd.AddCommand(dbMigrateUpCmd)
 }

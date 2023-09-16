@@ -7,41 +7,6 @@ import (
 	"github.com/go-faster/jx"
 )
 
-// Encode encodes int64 as json.
-func (o OptInt64) Encode(e *jx.Encoder) {
-	if !o.Set {
-		return
-	}
-	e.Int64(int64(o.Value))
-}
-
-// Decode decodes int64 from json.
-func (o *OptInt64) Decode(d *jx.Decoder) error {
-	if o == nil {
-		return errors.New("invalid: unable to decode OptInt64 to nil")
-	}
-	o.Set = true
-	v, err := d.Int64()
-	if err != nil {
-		return err
-	}
-	o.Value = int64(v)
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s OptInt64) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *OptInt64) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
 // Encode encodes string as json.
 func (o OptString) Encode(e *jx.Encoder) {
 	if !o.Set {
@@ -77,6 +42,56 @@ func (s *OptString) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes V1GetUserListOKApplicationJSON as json.
+func (s V1GetUserListOKApplicationJSON) Encode(e *jx.Encoder) {
+	unwrapped := []V1User(s)
+
+	e.ArrStart()
+	for _, elem := range unwrapped {
+		elem.Encode(e)
+	}
+	e.ArrEnd()
+}
+
+// Decode decodes V1GetUserListOKApplicationJSON from json.
+func (s *V1GetUserListOKApplicationJSON) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode V1GetUserListOKApplicationJSON to nil")
+	}
+	var unwrapped []V1User
+	if err := func() error {
+		unwrapped = make([]V1User, 0)
+		if err := d.Arr(func(d *jx.Decoder) error {
+			var elem V1User
+			if err := elem.Decode(d); err != nil {
+				return err
+			}
+			unwrapped = append(unwrapped, elem)
+			return nil
+		}); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return errors.Wrap(err, "alias")
+	}
+	*s = V1GetUserListOKApplicationJSON(unwrapped)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s V1GetUserListOKApplicationJSON) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *V1GetUserListOKApplicationJSON) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode implements json.Marshaler.
 func (s *V1User) Encode(e *jx.Encoder) {
 	e.ObjStart()
@@ -100,7 +115,7 @@ func (s *V1User) encodeFields(e *jx.Encoder) {
 	}
 	{
 		if s.PhotoUrls != nil {
-			e.FieldStart("photoUrls")
+			e.FieldStart("photo_urls")
 			e.ArrStart()
 			for _, elem := range s.PhotoUrls {
 				e.Str(elem)
@@ -113,7 +128,7 @@ func (s *V1User) encodeFields(e *jx.Encoder) {
 var jsonFieldsNameOfV1User = [3]string{
 	0: "id",
 	1: "name",
-	2: "photoUrls",
+	2: "photo_urls",
 }
 
 // Decode decodes V1User from json.
@@ -144,7 +159,7 @@ func (s *V1User) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"name\"")
 			}
-		case "photoUrls":
+		case "photo_urls":
 			if err := func() error {
 				s.PhotoUrls = make([]string, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -161,7 +176,7 @@ func (s *V1User) Decode(d *jx.Decoder) error {
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"photoUrls\"")
+				return errors.Wrap(err, "decode field \"photo_urls\"")
 			}
 		default:
 			return d.Skip()

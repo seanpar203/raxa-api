@@ -8,9 +8,13 @@ info:
   title: Go API
 
 tags:
-  - name: user
+  - name: users
     description: Everything related to users
 
 paths:
-  /v1/user/{id}:
-    $ref: "./v1/paths/users_by_id.yml"
+  /v1/users:
+    $ref: "./v1/paths/users.yml"
+
+  /v1/users/{id}:
+    $ref: "./v1/paths/users_id.yml"
+

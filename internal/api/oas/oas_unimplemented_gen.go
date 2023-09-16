@@ -17,7 +17,16 @@ var _ Handler = UnimplementedHandler{}
 //
 // Returns a single user.
 //
-// GET /v1/user/{id}
+// GET /v1/users/{id}
 func (UnimplementedHandler) V1GetUserByID(ctx context.Context, params V1GetUserByIDParams) (r V1GetUserByIDRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// V1GetUserList implements v1_Get_User_List operation.
+//
+// Returns a single user.
+//
+// GET /v1/users
+func (UnimplementedHandler) V1GetUserList(ctx context.Context) (r V1GetUserListRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
