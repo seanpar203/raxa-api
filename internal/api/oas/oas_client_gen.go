@@ -69,20 +69,20 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 	return u
 }
 
-// GetUserByID invokes getUserByID operation.
+// V1GetUserByID invokes v1_Get_User_By_ID operation.
 //
 // Returns a single user.
 //
 // GET /v1/user/{id}
-func (c *Client) GetUserByID(ctx context.Context, params GetUserByIDParams) (GetUserByIDRes, error) {
-	res, err := c.sendGetUserByID(ctx, params)
+func (c *Client) V1GetUserByID(ctx context.Context, params V1GetUserByIDParams) (V1GetUserByIDRes, error) {
+	res, err := c.sendV1GetUserByID(ctx, params)
 	_ = res
 	return res, err
 }
 
-func (c *Client) sendGetUserByID(ctx context.Context, params GetUserByIDParams) (res GetUserByIDRes, err error) {
+func (c *Client) sendV1GetUserByID(ctx context.Context, params V1GetUserByIDParams) (res V1GetUserByIDRes, err error) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("getUserByID"),
+		otelogen.OperationID("v1_Get_User_By_ID"),
 		semconv.HTTPMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/v1/user/{id}"),
 	}
@@ -99,7 +99,7 @@ func (c *Client) sendGetUserByID(ctx context.Context, params GetUserByIDParams) 
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetUserByID",
+	ctx, span := c.cfg.Tracer.Start(ctx, "V1GetUserByID",
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -152,7 +152,7 @@ func (c *Client) sendGetUserByID(ctx context.Context, params GetUserByIDParams) 
 	defer resp.Body.Close()
 
 	stage = "DecodeResponse"
-	result, err := decodeGetUserByIDResponse(resp)
+	result, err := decodeV1GetUserByIDResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

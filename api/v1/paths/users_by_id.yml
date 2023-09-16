@@ -3,7 +3,7 @@ get:
     - pet
   summary: Get user by ID
   description: Returns a single user
-  operationId: getUserByID
+  operationId: v1_Get_User_By_ID
   parameters:
     - name: id
       in: path
@@ -18,6 +18,6 @@ get:
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/User.yml'
+            $ref: '../components/schemas/V1_User.yml'
     default:
       description: Pet not found

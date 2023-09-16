@@ -14,7 +14,7 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
-func decodeGetUserByIDResponse(resp *http.Response) (res GetUserByIDRes, _ error) {
+func decodeV1GetUserByIDResponse(resp *http.Response) (res V1GetUserByIDRes, _ error) {
 	switch resp.StatusCode {
 	case 200:
 		// Code 200.
@@ -30,7 +30,7 @@ func decodeGetUserByIDResponse(resp *http.Response) (res GetUserByIDRes, _ error
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response User
+			var response V1User
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -53,8 +53,8 @@ func decodeGetUserByIDResponse(resp *http.Response) (res GetUserByIDRes, _ error
 		}
 	}
 	// Default response.
-	res, err := func() (res GetUserByIDRes, err error) {
-		return &GetUserByIDDef{
+	res, err := func() (res V1GetUserByIDRes, err error) {
+		return &V1GetUserByIDDef{
 			StatusCode: resp.StatusCode,
 		}, nil
 	}()

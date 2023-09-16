@@ -13,4 +13,4 @@ tags:
 
 paths:
   /v1/user/{id}:
-    $ref: "./v1/paths/users-by-id.yml"
+    $ref: "./v1/paths/users_by_id.yml"

@@ -60,7 +60,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				// Leaf node.
 				switch r.Method {
 				case "GET":
-					s.handleGetUserByIDRequest([1]string{
+					s.handleV1GetUserByIDRequest([1]string{
 						args[0],
 					}, elemIsEscaped, w, r)
 				default:
@@ -153,9 +153,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 			if len(elem) == 0 {
 				switch method {
 				case "GET":
-					// Leaf: GetUserByID
-					r.name = "GetUserByID"
-					r.operationID = "getUserByID"
+					// Leaf: V1GetUserByID
+					r.name = "V1GetUserByID"
+					r.operationID = "v1_Get_User_By_ID"
 					r.pathPattern = "/v1/user/{id}"
 					r.args = args
 					r.count = 1

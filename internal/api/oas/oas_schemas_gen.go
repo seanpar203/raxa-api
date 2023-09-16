@@ -2,23 +2,6 @@
 
 package oas
 
-// GetUserByIDDef is default response for GetUserByID operation.
-type GetUserByIDDef struct {
-	StatusCode int
-}
-
-// GetStatusCode returns the value of StatusCode.
-func (s *GetUserByIDDef) GetStatusCode() int {
-	return s.StatusCode
-}
-
-// SetStatusCode sets the value of StatusCode.
-func (s *GetUserByIDDef) SetStatusCode(val int) {
-	s.StatusCode = val
-}
-
-func (*GetUserByIDDef) getUserByIDRes() {}
-
 // NewOptInt64 returns new OptInt64 with value set to v.
 func NewOptInt64(v int64) OptInt64 {
 	return OptInt64{
@@ -111,41 +94,58 @@ func (o OptString) Or(d string) string {
 	return d
 }
 
+// V1GetUserByIDDef is default response for V1GetUserByID operation.
+type V1GetUserByIDDef struct {
+	StatusCode int
+}
+
+// GetStatusCode returns the value of StatusCode.
+func (s *V1GetUserByIDDef) GetStatusCode() int {
+	return s.StatusCode
+}
+
+// SetStatusCode sets the value of StatusCode.
+func (s *V1GetUserByIDDef) SetStatusCode(val int) {
+	s.StatusCode = val
+}
+
+func (*V1GetUserByIDDef) v1GetUserByIDRes() {}
+
 // Ref: #
-type User struct {
+type V1User struct {
 	ID        OptInt64  `json:"id"`
 	Name      OptString `json:"name"`
 	PhotoUrls []string  `json:"photoUrls"`
 }
 
 // GetID returns the value of ID.
-func (s *User) GetID() OptInt64 {
+func (s *V1User) GetID() OptInt64 {
 	return s.ID
 }
 
 // GetName returns the value of Name.
-func (s *User) GetName() OptString {
+func (s *V1User) GetName() OptString {
 	return s.Name
 }
 
 // GetPhotoUrls returns the value of PhotoUrls.
-func (s *User) GetPhotoUrls() []string {
+func (s *V1User) GetPhotoUrls() []string {
 	return s.PhotoUrls
 }
 
 // SetID sets the value of ID.
-func (s *User) SetID(val OptInt64) {
+func (s *V1User) SetID(val OptInt64) {
 	s.ID = val
 }
 
 // SetName sets the value of Name.
-func (s *User) SetName(val OptString) {
+func (s *V1User) SetName(val OptString) {
 	s.Name = val
 }
 
 // SetPhotoUrls sets the value of PhotoUrls.
-func (s *User) SetPhotoUrls(val []string) {
+func (s *V1User) SetPhotoUrls(val []string) {
 	s.PhotoUrls = val
 }
 
-func (*User) getUserByIDRes() {}
+func (*V1User) v1GetUserByIDRes() {}

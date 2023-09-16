@@ -20,20 +20,20 @@ import (
 	"github.com/ogen-go/ogen/otelogen"
 )
 
-// handleGetUserByIDRequest handles getUserByID operation.
+// handleV1GetUserByIDRequest handles v1_Get_User_By_ID operation.
 //
 // Returns a single user.
 //
 // GET /v1/user/{id}
-func (s *Server) handleGetUserByIDRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleV1GetUserByIDRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("getUserByID"),
+		otelogen.OperationID("v1_Get_User_By_ID"),
 		semconv.HTTPMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/v1/user/{id}"),
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetUserByID",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "V1GetUserByID",
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -58,11 +58,11 @@ func (s *Server) handleGetUserByIDRequest(args [1]string, argsEscaped bool, w ht
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetUserByID",
-			ID:   "getUserByID",
+			Name: "V1GetUserByID",
+			ID:   "v1_Get_User_By_ID",
 		}
 	)
-	params, err := decodeGetUserByIDParams(args, argsEscaped, r)
+	params, err := decodeV1GetUserByIDParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
 			OperationContext: opErrContext,
@@ -73,12 +73,12 @@ func (s *Server) handleGetUserByIDRequest(args [1]string, argsEscaped bool, w ht
 		return
 	}
 
-	var response GetUserByIDRes
+	var response V1GetUserByIDRes
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:       ctx,
-			OperationName: "GetUserByID",
-			OperationID:   "getUserByID",
+			OperationName: "V1GetUserByID",
+			OperationID:   "v1_Get_User_By_ID",
 			Body:          nil,
 			Params: middleware.Parameters{
 				{
@@ -91,8 +91,8 @@ func (s *Server) handleGetUserByIDRequest(args [1]string, argsEscaped bool, w ht
 
 		type (
 			Request  = struct{}
-			Params   = GetUserByIDParams
-			Response = GetUserByIDRes
+			Params   = V1GetUserByIDParams
+			Response = V1GetUserByIDRes
 		)
 		response, err = middleware.HookMiddleware[
 			Request,
@@ -101,14 +101,14 @@ func (s *Server) handleGetUserByIDRequest(args [1]string, argsEscaped bool, w ht
 		](
 			m,
 			mreq,
-			unpackGetUserByIDParams,
+			unpackV1GetUserByIDParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.GetUserByID(ctx, params)
+				response, err = s.h.V1GetUserByID(ctx, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.GetUserByID(ctx, params)
+		response, err = s.h.V1GetUserByID(ctx, params)
 	}
 	if err != nil {
 		recordError("Internal", err)
@@ -116,7 +116,7 @@ func (s *Server) handleGetUserByIDRequest(args [1]string, argsEscaped bool, w ht
 		return
 	}
 
-	if err := encodeGetUserByIDResponse(response, w, span); err != nil {
+	if err := encodeV1GetUserByIDResponse(response, w, span); err != nil {
 		recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)

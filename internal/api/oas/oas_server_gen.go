@@ -8,12 +8,12 @@ import (
 
 // Handler handles operations described by OpenAPI v3 specification.
 type Handler interface {
-	// GetUserByID implements getUserByID operation.
+	// V1GetUserByID implements v1_Get_User_By_ID operation.
 	//
 	// Returns a single user.
 	//
 	// GET /v1/user/{id}
-	GetUserByID(ctx context.Context, params GetUserByIDParams) (GetUserByIDRes, error)
+	V1GetUserByID(ctx context.Context, params V1GetUserByIDParams) (V1GetUserByIDRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

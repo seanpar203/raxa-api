@@ -13,11 +13,11 @@ type UnimplementedHandler struct{}
 
 var _ Handler = UnimplementedHandler{}
 
-// GetUserByID implements getUserByID operation.
+// V1GetUserByID implements v1_Get_User_By_ID operation.
 //
 // Returns a single user.
 //
 // GET /v1/user/{id}
-func (UnimplementedHandler) GetUserByID(ctx context.Context, params GetUserByIDParams) (r GetUserByIDRes, _ error) {
+func (UnimplementedHandler) V1GetUserByID(ctx context.Context, params V1GetUserByIDParams) (r V1GetUserByIDRes, _ error) {
 	return r, ht.ErrNotImplemented
 }

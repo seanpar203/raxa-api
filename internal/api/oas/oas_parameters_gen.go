@@ -15,13 +15,13 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
-// GetUserByIDParams is parameters of getUserByID operation.
-type GetUserByIDParams struct {
+// V1GetUserByIDParams is parameters of v1_Get_User_By_ID operation.
+type V1GetUserByIDParams struct {
 	// ID of user to return.
 	ID int64
 }
 
-func unpackGetUserByIDParams(packed middleware.Parameters) (params GetUserByIDParams) {
+func unpackV1GetUserByIDParams(packed middleware.Parameters) (params V1GetUserByIDParams) {
 	{
 		key := middleware.ParameterKey{
 			Name: "id",
@@ -32,7 +32,7 @@ func unpackGetUserByIDParams(packed middleware.Parameters) (params GetUserByIDPa
 	return params
 }
 
-func decodeGetUserByIDParams(args [1]string, argsEscaped bool, r *http.Request) (params GetUserByIDParams, _ error) {
+func decodeV1GetUserByIDParams(args [1]string, argsEscaped bool, r *http.Request) (params V1GetUserByIDParams, _ error) {
 	// Decode path: id.
 	if err := func() error {
 		param := args[0]

@@ -13,9 +13,9 @@ import (
 	ht "github.com/ogen-go/ogen/http"
 )
 
-func encodeGetUserByIDResponse(response GetUserByIDRes, w http.ResponseWriter, span trace.Span) error {
+func encodeV1GetUserByIDResponse(response V1GetUserByIDRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
-	case *User:
+	case *V1User:
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
 		span.SetStatus(codes.Ok, http.StatusText(200))
@@ -28,7 +28,7 @@ func encodeGetUserByIDResponse(response GetUserByIDRes, w http.ResponseWriter, s
 
 		return nil
 
-	case *GetUserByIDDef:
+	case *V1GetUserByIDDef:
 		code := response.StatusCode
 		if code == 0 {
 			// Set default status code.
