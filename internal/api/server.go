@@ -5,10 +5,13 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
 	"github.com/seanpar203/go-api/internal/api/oas"
+	"github.com/seanpar203/go-api/internal/common"
 	"github.com/seanpar203/go-api/internal/db"
 )
 
-type API struct{}
+type API struct {
+	Port string
+}
 
 func New() (*oas.Server, error) {
 
@@ -20,5 +23,7 @@ func New() (*oas.Server, error) {
 
 	boil.SetDB(db)
 
-	return oas.NewServer(&API{})
+	return oas.NewServer(&API{
+		Port: common.GetEnv("API_PORT", "8080"),
+	})
 }

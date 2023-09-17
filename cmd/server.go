@@ -12,11 +12,23 @@ import (
 	"github.com/seanpar203/go-api/internal/api"
 )
 
+var migrateFlag = "migrate"
+
 // serverCmd represents the server command
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Runs our server",
 	Run: func(cmd *cobra.Command, args []string) {
+
+		migrate, err := cmd.Flags().GetBool(migrateFlag)
+
+		if err != nil {
+			log.Panic().Msg(err.Error())
+		}
+
+		if migrate {
+			dbMigrateUpCmd.Run(cmd, args)
+		}
 
 		svc, err := api.New()
 
@@ -34,4 +46,6 @@ var serverCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(serverCmd)
+
+	serverCmd.Flags().BoolP(migrateFlag, "m", false, "Run migrations")
 }
