@@ -18,6 +18,6 @@ get:
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/V1_User.yml'
+            $ref: '../schemas/V1_User.yml'
     default:
       description: Pet not found

@@ -13,8 +13,8 @@ tags:
 
 paths:
   /v1/users:
-    $ref: "./v1/paths/users.yml"
+    $ref: "./paths/v1_users_list.yml"
 
   /v1/users/{id}:
-    $ref: "./v1/paths/users_id.yml"
+    $ref: "./paths/v1_users_detail.yml"
 

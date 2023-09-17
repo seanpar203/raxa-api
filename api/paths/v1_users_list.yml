@@ -12,6 +12,6 @@ get:
           schema:
             type: array
             items:
-              $ref: '../components/schemas/V1_User.yml'
+              $ref: '../schemas/V1_User.yml'
     default:
       description: User not found
