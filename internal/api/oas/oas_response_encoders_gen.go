@@ -13,6 +13,20 @@ import (
 	ht "github.com/ogen-go/ogen/http"
 )
 
+func encodeV1CreateSignupUserResponse(response *V1SignupUser, w http.ResponseWriter, span trace.Span) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	span.SetStatus(codes.Ok, http.StatusText(200))
+
+	e := jx.GetEncoder()
+	response.Encode(e)
+	if _, err := e.WriteTo(w); err != nil {
+		return errors.Wrap(err, "write")
+	}
+
+	return nil
+}
+
 func encodeV1GetUserByIDResponse(response V1GetUserByIDRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *V1User:
@@ -54,7 +68,7 @@ func encodeV1GetUserByIDResponse(response V1GetUserByIDRes, w http.ResponseWrite
 
 func encodeV1GetUserListResponse(response V1GetUserListRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
-	case *V1GetUserListOKApplicationJSON:
+	case *V1Users:
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
 		span.SetStatus(codes.Ok, http.StatusText(200))

@@ -8,6 +8,12 @@ import (
 
 // Handler handles operations described by OpenAPI v3 specification.
 type Handler interface {
+	// V1CreateSignupUser implements V1_Create_Signup_User operation.
+	//
+	// Creates a signup user that will later be converted into an actual user.
+	//
+	// POST /v1/signup
+	V1CreateSignupUser(ctx context.Context, req *V1CreateSignupUserReq) (*V1SignupUser, error)
 	// V1GetUserByID implements v1_Get_User_By_ID operation.
 	//
 	// Returns a single user.

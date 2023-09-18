@@ -23,17 +23,8 @@ var dbMigrateUpCmd = &cobra.Command{
 	Short: "Migrates the database all the way to the latest state.",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		force, err := cmd.Flags().GetBool(forceFlag)
-
-		if err != nil {
-			log.Panic().Msg(err.Error())
-		}
-
-		version, err := cmd.Flags().GetInt(versionFlag)
-
-		if err != nil {
-			log.Panic().Msg(err.Error())
-		}
+		force, _ := cmd.Flags().GetBool(forceFlag)
+		version, _ := cmd.Flags().GetInt(versionFlag)
 
 		if force && version == 0 {
 			log.Panic().Msg("You must specify a version to force")

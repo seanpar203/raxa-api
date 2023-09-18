@@ -8,13 +8,120 @@ info:
   title: Go API
 
 tags:
+  - name: signup
+    description: Everything related to signup
+
   - name: users
     description: Everything related to users
 
 paths:
+  /v1/signup:
+    post:
+      summary: Creating a signup user
+      description: Creates a signup user that will later be converted into an actual user.
+      operationId: V1_Create_Signup_User
+      requestBody:
+        $ref: "#/components/requestBodies/V1CreateSignupUser"
+      responses:
+        '200':
+          description: Response for creating a new signup user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/V1SignupUser"
   /v1/users:
-    $ref: "./paths/v1_users_list.yml"
+    get:
+      tags:
+        - users
+      summary: Returns a list of users
+      description: Returns a single user
+      operationId: v1_Get_User_List
+      responses:
+        '200':
+          description: Response for getting a single user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/V1Users"
+        default:
+          description: User not found
 
   /v1/users/{id}:
-    $ref: "./paths/v1_users_detail.yml"
+    get:
+      tags:
+        - users
+      summary: Get user by ID
+      description: Returns a single user
+      operationId: v1_Get_User_By_ID
+      parameters:
+        - name: id
+          in: path
+          description: ID of user to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Response for getting a single user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/V1User"
+        default:
+          description: Pet not found
+  
+components:
+  schemas:
+    V1User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "0c589d81-a70b-4e5d-81e9-4251ab97d2d0"
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          example: "john@doe.com"
+    
+    V1Users:
+      type: array
+      items:
+        $ref: '#/components/schemas/V1User'
 
+    V1SignupUser:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "0c589d81-a70b-4e5d-81e9-4251ab97d2d0"
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          example: "john@doe.com" 
+
+  requestBodies:
+    V1CreateSignupUser:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - name
+              - email
+              - password
+            properties:
+              name:
+                type: string
+                example: "John Doe"
+              email:
+                type: string
+                format: email
+                example: "john@doe.com"
+              password:
+                type: string

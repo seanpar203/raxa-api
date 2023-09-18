@@ -13,6 +13,15 @@ type UnimplementedHandler struct{}
 
 var _ Handler = UnimplementedHandler{}
 
+// V1CreateSignupUser implements V1_Create_Signup_User operation.
+//
+// Creates a signup user that will later be converted into an actual user.
+//
+// POST /v1/signup
+func (UnimplementedHandler) V1CreateSignupUser(ctx context.Context, req *V1CreateSignupUserReq) (r *V1SignupUser, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // V1GetUserByID implements v1_Get_User_By_ID operation.
 //
 // Returns a single user.

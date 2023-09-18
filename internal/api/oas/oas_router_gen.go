@@ -44,48 +44,78 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		switch elem[0] {
-		case '/': // Prefix: "/v1/users"
-			if l := len("/v1/users"); len(elem) >= l && elem[0:l] == "/v1/users" {
+		case '/': // Prefix: "/v1/"
+			if l := len("/v1/"); len(elem) >= l && elem[0:l] == "/v1/" {
 				elem = elem[l:]
 			} else {
 				break
 			}
 
 			if len(elem) == 0 {
-				switch r.Method {
-				case "GET":
-					s.handleV1GetUserListRequest([0]string{}, elemIsEscaped, w, r)
-				default:
-					s.notAllowed(w, r, "GET")
-				}
-
-				return
+				break
 			}
 			switch elem[0] {
-			case '/': // Prefix: "/"
-				if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+			case 's': // Prefix: "signup"
+				if l := len("signup"); len(elem) >= l && elem[0:l] == "signup" {
 					elem = elem[l:]
 				} else {
 					break
 				}
 
-				// Param: "id"
-				// Leaf parameter
-				args[0] = elem
-				elem = ""
-
 				if len(elem) == 0 {
 					// Leaf node.
 					switch r.Method {
+					case "POST":
+						s.handleV1CreateSignupUserRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "POST")
+					}
+
+					return
+				}
+			case 'u': // Prefix: "users"
+				if l := len("users"); len(elem) >= l && elem[0:l] == "users" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					switch r.Method {
 					case "GET":
-						s.handleV1GetUserByIDRequest([1]string{
-							args[0],
-						}, elemIsEscaped, w, r)
+						s.handleV1GetUserListRequest([0]string{}, elemIsEscaped, w, r)
 					default:
 						s.notAllowed(w, r, "GET")
 					}
 
 					return
+				}
+				switch elem[0] {
+				case '/': // Prefix: "/"
+					if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					// Param: "id"
+					// Leaf parameter
+					args[0] = elem
+					elem = ""
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "GET":
+							s.handleV1GetUserByIDRequest([1]string{
+								args[0],
+							}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET")
+						}
+
+						return
+					}
 				}
 			}
 		}
@@ -157,51 +187,84 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 			break
 		}
 		switch elem[0] {
-		case '/': // Prefix: "/v1/users"
-			if l := len("/v1/users"); len(elem) >= l && elem[0:l] == "/v1/users" {
+		case '/': // Prefix: "/v1/"
+			if l := len("/v1/"); len(elem) >= l && elem[0:l] == "/v1/" {
 				elem = elem[l:]
 			} else {
 				break
 			}
 
 			if len(elem) == 0 {
-				switch method {
-				case "GET":
-					r.name = "V1GetUserList"
-					r.operationID = "v1_Get_User_List"
-					r.pathPattern = "/v1/users"
-					r.args = args
-					r.count = 0
-					return r, true
-				default:
-					return
-				}
+				break
 			}
 			switch elem[0] {
-			case '/': // Prefix: "/"
-				if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+			case 's': // Prefix: "signup"
+				if l := len("signup"); len(elem) >= l && elem[0:l] == "signup" {
 					elem = elem[l:]
 				} else {
 					break
 				}
 
-				// Param: "id"
-				// Leaf parameter
-				args[0] = elem
-				elem = ""
+				if len(elem) == 0 {
+					switch method {
+					case "POST":
+						// Leaf: V1CreateSignupUser
+						r.name = "V1CreateSignupUser"
+						r.operationID = "V1_Create_Signup_User"
+						r.pathPattern = "/v1/signup"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
+					}
+				}
+			case 'u': // Prefix: "users"
+				if l := len("users"); len(elem) >= l && elem[0:l] == "users" {
+					elem = elem[l:]
+				} else {
+					break
+				}
 
 				if len(elem) == 0 {
 					switch method {
 					case "GET":
-						// Leaf: V1GetUserByID
-						r.name = "V1GetUserByID"
-						r.operationID = "v1_Get_User_By_ID"
-						r.pathPattern = "/v1/users/{id}"
+						r.name = "V1GetUserList"
+						r.operationID = "v1_Get_User_List"
+						r.pathPattern = "/v1/users"
 						r.args = args
-						r.count = 1
+						r.count = 0
 						return r, true
 					default:
 						return
+					}
+				}
+				switch elem[0] {
+				case '/': // Prefix: "/"
+					if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					// Param: "id"
+					// Leaf parameter
+					args[0] = elem
+					elem = ""
+
+					if len(elem) == 0 {
+						switch method {
+						case "GET":
+							// Leaf: V1GetUserByID
+							r.name = "V1GetUserByID"
+							r.operationID = "v1_Get_User_By_ID"
+							r.pathPattern = "/v1/users/{id}"
+							r.args = args
+							r.count = 1
+							return r, true
+						default:
+							return
+						}
 					}
 				}
 			}
