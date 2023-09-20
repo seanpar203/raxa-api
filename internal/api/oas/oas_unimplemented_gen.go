@@ -13,29 +13,29 @@ type UnimplementedHandler struct{}
 
 var _ Handler = UnimplementedHandler{}
 
-// V1CreateSignupUser implements V1_Create_Signup_User operation.
+// V1UsersCreate implements V1_Users_Create operation.
 //
-// Creates a signup user that will later be converted into an actual user.
+// Creates and returns a new user.
 //
-// POST /v1/signup
-func (UnimplementedHandler) V1CreateSignupUser(ctx context.Context, req *V1CreateSignupUserReq) (r *V1SignupUser, _ error) {
+// POST /v1/users
+func (UnimplementedHandler) V1UsersCreate(ctx context.Context, req *V1UsersCreateReq) (r V1UsersCreateRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
-// V1GetUserByID implements v1_Get_User_By_ID operation.
+// V1UsersMe implements V1_Users_Me operation.
 //
-// Returns a single user.
+// Gets the current user.
 //
-// GET /v1/users/{id}
-func (UnimplementedHandler) V1GetUserByID(ctx context.Context, params V1GetUserByIDParams) (r V1GetUserByIDRes, _ error) {
+// GET /v1/users/me
+func (UnimplementedHandler) V1UsersMe(ctx context.Context) (r V1UsersMeRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
-// V1GetUserList implements v1_Get_User_List operation.
+// V1UsersMeUpdate implements V1_Users_Me_Update operation.
 //
-// Returns a single user.
+// Updates the user.
 //
-// GET /v1/users
-func (UnimplementedHandler) V1GetUserList(ctx context.Context) (r V1GetUserListRes, _ error) {
+// PATCH /v1/users/me
+func (UnimplementedHandler) V1UsersMeUpdate(ctx context.Context) (r V1UsersMeUpdateRes, _ error) {
 	return r, ht.ErrNotImplemented
 }

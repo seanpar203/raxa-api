@@ -8,41 +8,43 @@ import (
 
 // Handler handles operations described by OpenAPI v3 specification.
 type Handler interface {
-	// V1CreateSignupUser implements V1_Create_Signup_User operation.
+	// V1UsersCreate implements V1_Users_Create operation.
 	//
-	// Creates a signup user that will later be converted into an actual user.
+	// Creates and returns a new user.
 	//
-	// POST /v1/signup
-	V1CreateSignupUser(ctx context.Context, req *V1CreateSignupUserReq) (*V1SignupUser, error)
-	// V1GetUserByID implements v1_Get_User_By_ID operation.
+	// POST /v1/users
+	V1UsersCreate(ctx context.Context, req *V1UsersCreateReq) (V1UsersCreateRes, error)
+	// V1UsersMe implements V1_Users_Me operation.
 	//
-	// Returns a single user.
+	// Gets the current user.
 	//
-	// GET /v1/users/{id}
-	V1GetUserByID(ctx context.Context, params V1GetUserByIDParams) (V1GetUserByIDRes, error)
-	// V1GetUserList implements v1_Get_User_List operation.
+	// GET /v1/users/me
+	V1UsersMe(ctx context.Context) (V1UsersMeRes, error)
+	// V1UsersMeUpdate implements V1_Users_Me_Update operation.
 	//
-	// Returns a single user.
+	// Updates the user.
 	//
-	// GET /v1/users
-	V1GetUserList(ctx context.Context) (V1GetUserListRes, error)
+	// PATCH /v1/users/me
+	V1UsersMeUpdate(ctx context.Context) (V1UsersMeUpdateRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and
 // calls Handler to handle requests.
 type Server struct {
-	h Handler
+	h   Handler
+	sec SecurityHandler
 	baseServer
 }
 
 // NewServer creates new Server.
-func NewServer(h Handler, opts ...ServerOption) (*Server, error) {
+func NewServer(h Handler, sec SecurityHandler, opts ...ServerOption) (*Server, error) {
 	s, err := newServerConfig(opts...).baseServer()
 	if err != nil {
 		return nil, err
 	}
 	return &Server{
 		h:          h,
+		sec:        sec,
 		baseServer: s,
 	}, nil
 }

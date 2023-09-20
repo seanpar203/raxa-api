@@ -1,10 +1,13 @@
 CREATE TABLE IF NOT EXISTS users(
-    id uuid NOT NULL PRIMARY KEY DEFAULT uuid_generate_v4 (),
-    email varchar(255),
-    "password" text,
+    id uuid PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+    email varchar(255) NOT NULL,
+    "password" text NOT NULL,
+    name varchar(255),
     is_active bool NOT NULL,
+    phone_number varchar(15),
+    has_verified_phone bool NOT NULL DEFAULT false,
     last_authenticated_at timestamptz,
-    created_at timestamptz NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT (now()),
     updated_at timestamptz NOT NULL
 );
 

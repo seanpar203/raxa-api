@@ -35,7 +35,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.notFound(w, r)
 		return
 	}
-	args := [1]string{}
 
 	// Static code generated router with unwrapped path search.
 	switch {
@@ -44,19 +43,26 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		switch elem[0] {
-		case '/': // Prefix: "/v1/"
-			if l := len("/v1/"); len(elem) >= l && elem[0:l] == "/v1/" {
+		case '/': // Prefix: "/v1/users"
+			if l := len("/v1/users"); len(elem) >= l && elem[0:l] == "/v1/users" {
 				elem = elem[l:]
 			} else {
 				break
 			}
 
 			if len(elem) == 0 {
-				break
+				switch r.Method {
+				case "POST":
+					s.handleV1UsersCreateRequest([0]string{}, elemIsEscaped, w, r)
+				default:
+					s.notAllowed(w, r, "POST")
+				}
+
+				return
 			}
 			switch elem[0] {
-			case 's': // Prefix: "signup"
-				if l := len("signup"); len(elem) >= l && elem[0:l] == "signup" {
+			case '/': // Prefix: "/me"
+				if l := len("/me"); len(elem) >= l && elem[0:l] == "/me" {
 					elem = elem[l:]
 				} else {
 					break
@@ -65,57 +71,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				if len(elem) == 0 {
 					// Leaf node.
 					switch r.Method {
-					case "POST":
-						s.handleV1CreateSignupUserRequest([0]string{}, elemIsEscaped, w, r)
-					default:
-						s.notAllowed(w, r, "POST")
-					}
-
-					return
-				}
-			case 'u': // Prefix: "users"
-				if l := len("users"); len(elem) >= l && elem[0:l] == "users" {
-					elem = elem[l:]
-				} else {
-					break
-				}
-
-				if len(elem) == 0 {
-					switch r.Method {
 					case "GET":
-						s.handleV1GetUserListRequest([0]string{}, elemIsEscaped, w, r)
+						s.handleV1UsersMeRequest([0]string{}, elemIsEscaped, w, r)
+					case "PATCH":
+						s.handleV1UsersMeUpdateRequest([0]string{}, elemIsEscaped, w, r)
 					default:
-						s.notAllowed(w, r, "GET")
+						s.notAllowed(w, r, "GET,PATCH")
 					}
 
 					return
-				}
-				switch elem[0] {
-				case '/': // Prefix: "/"
-					if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
-						elem = elem[l:]
-					} else {
-						break
-					}
-
-					// Param: "id"
-					// Leaf parameter
-					args[0] = elem
-					elem = ""
-
-					if len(elem) == 0 {
-						// Leaf node.
-						switch r.Method {
-						case "GET":
-							s.handleV1GetUserByIDRequest([1]string{
-								args[0],
-							}, elemIsEscaped, w, r)
-						default:
-							s.notAllowed(w, r, "GET")
-						}
-
-						return
-					}
 				}
 			}
 		}
@@ -129,7 +93,7 @@ type Route struct {
 	operationID string
 	pathPattern string
 	count       int
-	args        [1]string
+	args        [0]string
 }
 
 // Name returns ogen operation name.
@@ -187,40 +151,29 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 			break
 		}
 		switch elem[0] {
-		case '/': // Prefix: "/v1/"
-			if l := len("/v1/"); len(elem) >= l && elem[0:l] == "/v1/" {
+		case '/': // Prefix: "/v1/users"
+			if l := len("/v1/users"); len(elem) >= l && elem[0:l] == "/v1/users" {
 				elem = elem[l:]
 			} else {
 				break
 			}
 
 			if len(elem) == 0 {
-				break
+				switch method {
+				case "POST":
+					r.name = "V1UsersCreate"
+					r.operationID = "V1_Users_Create"
+					r.pathPattern = "/v1/users"
+					r.args = args
+					r.count = 0
+					return r, true
+				default:
+					return
+				}
 			}
 			switch elem[0] {
-			case 's': // Prefix: "signup"
-				if l := len("signup"); len(elem) >= l && elem[0:l] == "signup" {
-					elem = elem[l:]
-				} else {
-					break
-				}
-
-				if len(elem) == 0 {
-					switch method {
-					case "POST":
-						// Leaf: V1CreateSignupUser
-						r.name = "V1CreateSignupUser"
-						r.operationID = "V1_Create_Signup_User"
-						r.pathPattern = "/v1/signup"
-						r.args = args
-						r.count = 0
-						return r, true
-					default:
-						return
-					}
-				}
-			case 'u': // Prefix: "users"
-				if l := len("users"); len(elem) >= l && elem[0:l] == "users" {
+			case '/': // Prefix: "/me"
+				if l := len("/me"); len(elem) >= l && elem[0:l] == "/me" {
 					elem = elem[l:]
 				} else {
 					break
@@ -229,42 +182,23 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				if len(elem) == 0 {
 					switch method {
 					case "GET":
-						r.name = "V1GetUserList"
-						r.operationID = "v1_Get_User_List"
-						r.pathPattern = "/v1/users"
+						// Leaf: V1UsersMe
+						r.name = "V1UsersMe"
+						r.operationID = "V1_Users_Me"
+						r.pathPattern = "/v1/users/me"
+						r.args = args
+						r.count = 0
+						return r, true
+					case "PATCH":
+						// Leaf: V1UsersMeUpdate
+						r.name = "V1UsersMeUpdate"
+						r.operationID = "V1_Users_Me_Update"
+						r.pathPattern = "/v1/users/me"
 						r.args = args
 						r.count = 0
 						return r, true
 					default:
 						return
-					}
-				}
-				switch elem[0] {
-				case '/': // Prefix: "/"
-					if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
-						elem = elem[l:]
-					} else {
-						break
-					}
-
-					// Param: "id"
-					// Leaf parameter
-					args[0] = elem
-					elem = ""
-
-					if len(elem) == 0 {
-						switch method {
-						case "GET":
-							// Leaf: V1GetUserByID
-							r.name = "V1GetUserByID"
-							r.operationID = "v1_Get_User_By_ID"
-							r.pathPattern = "/v1/users/{id}"
-							r.args = args
-							r.count = 1
-							return r, true
-						default:
-							return
-						}
 					}
 				}
 			}

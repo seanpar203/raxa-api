@@ -5,8 +5,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/rs/zerolog/log"
 )
 
 func GetEnv(key string, defaultVal string) string {

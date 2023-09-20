@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS otp;
+DROP TYPE IF EXISTS otp_channel;

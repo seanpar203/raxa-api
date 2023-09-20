@@ -11,8 +11,8 @@ import (
 	ht "github.com/ogen-go/ogen/http"
 )
 
-func encodeV1CreateSignupUserRequest(
-	req *V1CreateSignupUserReq,
+func encodeV1UsersCreateRequest(
+	req *V1UsersCreateReq,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

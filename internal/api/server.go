@@ -1,26 +1,25 @@
 package api
 
 import (
-	"github.com/rs/zerolog/log"
-	"github.com/volatiletech/sqlboiler/v4/boil"
+	"fmt"
 
 	"github.com/seanpar203/go-api/internal/api/oas"
-	"github.com/seanpar203/go-api/internal/db"
+	"github.com/seanpar203/go-api/internal/services"
 )
 
 type API struct {
-	Port string
+	Svcs *services.Services
 }
 
 func New() (*oas.Server, error) {
 
-	db, err := db.Postgres()
+	svcs, err := services.New(nil)
 
 	if err != nil {
-		log.Panic().Msg(err.Error())
+		return &oas.Server{}, fmt.Errorf("failed to create services: %w", err)
 	}
 
-	boil.SetDB(db)
+	api := &API{Svcs: svcs}
 
-	return &oas.Server{}, nil
+	return oas.NewServer(api, api, oas.WithMiddleware(LoggerMiddleware()))
 }

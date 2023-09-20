@@ -9,25 +9,42 @@ import (
 	"github.com/go-faster/jx"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
-
-	ht "github.com/ogen-go/ogen/http"
 )
 
-func encodeV1CreateSignupUserResponse(response *V1SignupUser, w http.ResponseWriter, span trace.Span) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-	span.SetStatus(codes.Ok, http.StatusText(200))
+func encodeV1UsersCreateResponse(response V1UsersCreateRes, w http.ResponseWriter, span trace.Span) error {
+	switch response := response.(type) {
+	case *V1CreateUserResponse:
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
 
-	e := jx.GetEncoder()
-	response.Encode(e)
-	if _, err := e.WriteTo(w); err != nil {
-		return errors.Wrap(err, "write")
+		e := jx.GetEncoder()
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *V1ErrorResponse:
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
+
+		e := jx.GetEncoder()
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	default:
+		return errors.Errorf("unexpected response type: %T", response)
 	}
-
-	return nil
 }
 
-func encodeV1GetUserByIDResponse(response V1GetUserByIDRes, w http.ResponseWriter, span trace.Span) error {
+func encodeV1UsersMeResponse(response V1UsersMeRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *V1User:
 		w.Header().Set("Content-Type", "application/json")
@@ -42,23 +59,17 @@ func encodeV1GetUserByIDResponse(response V1GetUserByIDRes, w http.ResponseWrite
 
 		return nil
 
-	case *V1GetUserByIDDef:
-		code := response.StatusCode
-		if code == 0 {
-			// Set default status code.
-			code = http.StatusOK
-		}
-		w.WriteHeader(code)
-		st := http.StatusText(code)
-		if code >= http.StatusBadRequest {
-			span.SetStatus(codes.Error, st)
-		} else {
-			span.SetStatus(codes.Ok, st)
+	case *V1ErrorResponse:
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
+
+		e := jx.GetEncoder()
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
 		}
 
-		if code >= http.StatusInternalServerError {
-			return errors.Wrapf(ht.ErrInternalServerErrorResponse, "code: %d, message: %s", code, http.StatusText(code))
-		}
 		return nil
 
 	default:
@@ -66,9 +77,9 @@ func encodeV1GetUserByIDResponse(response V1GetUserByIDRes, w http.ResponseWrite
 	}
 }
 
-func encodeV1GetUserListResponse(response V1GetUserListRes, w http.ResponseWriter, span trace.Span) error {
+func encodeV1UsersMeUpdateResponse(response V1UsersMeUpdateRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
-	case *V1Users:
+	case *V1CreateUserResponse:
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
 		span.SetStatus(codes.Ok, http.StatusText(200))
@@ -81,23 +92,17 @@ func encodeV1GetUserListResponse(response V1GetUserListRes, w http.ResponseWrite
 
 		return nil
 
-	case *V1GetUserListDef:
-		code := response.StatusCode
-		if code == 0 {
-			// Set default status code.
-			code = http.StatusOK
-		}
-		w.WriteHeader(code)
-		st := http.StatusText(code)
-		if code >= http.StatusBadRequest {
-			span.SetStatus(codes.Error, st)
-		} else {
-			span.SetStatus(codes.Ok, st)
+	case *V1ErrorResponse:
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
+
+		e := jx.GetEncoder()
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
 		}
 
-		if code >= http.StatusInternalServerError {
-			return errors.Wrapf(ht.ErrInternalServerErrorResponse, "code: %d, message: %s", code, http.StatusText(code))
-		}
 		return nil
 
 	default:

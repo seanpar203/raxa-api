@@ -2,198 +2,139 @@
 
 package oas
 
-// NewOptString returns new OptString with value set to v.
-func NewOptString(v string) OptString {
-	return OptString{
-		Value: v,
-		Set:   true,
-	}
+type BearerAuth struct {
+	Token string
 }
 
-// OptString is optional string.
-type OptString struct {
-	Value string
-	Set   bool
+// GetToken returns the value of Token.
+func (s *BearerAuth) GetToken() string {
+	return s.Token
 }
 
-// IsSet returns true if OptString was set.
-func (o OptString) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptString) Reset() {
-	var v string
-	o.Value = v
-	o.Set = false
+// SetToken sets the value of Token.
+func (s *BearerAuth) SetToken(val string) {
+	s.Token = val
 }
 
-// SetTo sets value to v.
-func (o *OptString) SetTo(v string) {
-	o.Set = true
-	o.Value = v
+type UUID string
+
+type V1CreateUserResponse struct {
+	AccessToken  UUID   `json:"access_token"`
+	RefreshToken UUID   `json:"refresh_token"`
+	User         V1User `json:"user"`
 }
 
-// Get returns value and boolean that denotes whether value was set.
-func (o OptString) Get() (v string, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
+// GetAccessToken returns the value of AccessToken.
+func (s *V1CreateUserResponse) GetAccessToken() UUID {
+	return s.AccessToken
 }
 
-// Or returns value if set, or given parameter if does not.
-func (o OptString) Or(d string) string {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
+// GetRefreshToken returns the value of RefreshToken.
+func (s *V1CreateUserResponse) GetRefreshToken() UUID {
+	return s.RefreshToken
 }
 
-type V1CreateSignupUserReq struct {
-	Name     string `json:"name"`
+// GetUser returns the value of User.
+func (s *V1CreateUserResponse) GetUser() V1User {
+	return s.User
+}
+
+// SetAccessToken sets the value of AccessToken.
+func (s *V1CreateUserResponse) SetAccessToken(val UUID) {
+	s.AccessToken = val
+}
+
+// SetRefreshToken sets the value of RefreshToken.
+func (s *V1CreateUserResponse) SetRefreshToken(val UUID) {
+	s.RefreshToken = val
+}
+
+// SetUser sets the value of User.
+func (s *V1CreateUserResponse) SetUser(val V1User) {
+	s.User = val
+}
+
+func (*V1CreateUserResponse) v1UsersCreateRes()   {}
+func (*V1CreateUserResponse) v1UsersMeUpdateRes() {}
+
+type V1ErrorResponse struct {
+	Message string `json:"message"`
+}
+
+// GetMessage returns the value of Message.
+func (s *V1ErrorResponse) GetMessage() string {
+	return s.Message
+}
+
+// SetMessage sets the value of Message.
+func (s *V1ErrorResponse) SetMessage(val string) {
+	s.Message = val
+}
+
+func (*V1ErrorResponse) v1UsersCreateRes()   {}
+func (*V1ErrorResponse) v1UsersMeRes()       {}
+func (*V1ErrorResponse) v1UsersMeUpdateRes() {}
+
+// Ref: #/components/schemas/V1User
+type V1User struct {
+	ID    UUID   `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
+// GetID returns the value of ID.
+func (s *V1User) GetID() UUID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *V1User) GetName() string {
+	return s.Name
+}
+
+// GetEmail returns the value of Email.
+func (s *V1User) GetEmail() string {
+	return s.Email
+}
+
+// SetID sets the value of ID.
+func (s *V1User) SetID(val UUID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *V1User) SetName(val string) {
+	s.Name = val
+}
+
+// SetEmail sets the value of Email.
+func (s *V1User) SetEmail(val string) {
+	s.Email = val
+}
+
+func (*V1User) v1UsersMeRes() {}
+
+type V1UsersCreateReq struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-// GetName returns the value of Name.
-func (s *V1CreateSignupUserReq) GetName() string {
-	return s.Name
-}
-
 // GetEmail returns the value of Email.
-func (s *V1CreateSignupUserReq) GetEmail() string {
+func (s *V1UsersCreateReq) GetEmail() string {
 	return s.Email
 }
 
 // GetPassword returns the value of Password.
-func (s *V1CreateSignupUserReq) GetPassword() string {
+func (s *V1UsersCreateReq) GetPassword() string {
 	return s.Password
 }
 
-// SetName sets the value of Name.
-func (s *V1CreateSignupUserReq) SetName(val string) {
-	s.Name = val
-}
-
 // SetEmail sets the value of Email.
-func (s *V1CreateSignupUserReq) SetEmail(val string) {
+func (s *V1UsersCreateReq) SetEmail(val string) {
 	s.Email = val
 }
 
 // SetPassword sets the value of Password.
-func (s *V1CreateSignupUserReq) SetPassword(val string) {
+func (s *V1UsersCreateReq) SetPassword(val string) {
 	s.Password = val
 }
-
-// V1GetUserByIDDef is default response for V1GetUserByID operation.
-type V1GetUserByIDDef struct {
-	StatusCode int
-}
-
-// GetStatusCode returns the value of StatusCode.
-func (s *V1GetUserByIDDef) GetStatusCode() int {
-	return s.StatusCode
-}
-
-// SetStatusCode sets the value of StatusCode.
-func (s *V1GetUserByIDDef) SetStatusCode(val int) {
-	s.StatusCode = val
-}
-
-func (*V1GetUserByIDDef) v1GetUserByIDRes() {}
-
-// V1GetUserListDef is default response for V1GetUserList operation.
-type V1GetUserListDef struct {
-	StatusCode int
-}
-
-// GetStatusCode returns the value of StatusCode.
-func (s *V1GetUserListDef) GetStatusCode() int {
-	return s.StatusCode
-}
-
-// SetStatusCode sets the value of StatusCode.
-func (s *V1GetUserListDef) SetStatusCode(val int) {
-	s.StatusCode = val
-}
-
-func (*V1GetUserListDef) v1GetUserListRes() {}
-
-// Ref: #/components/schemas/V1SignupUser
-type V1SignupUser struct {
-	ID    OptString `json:"id"`
-	Name  OptString `json:"name"`
-	Email OptString `json:"email"`
-}
-
-// GetID returns the value of ID.
-func (s *V1SignupUser) GetID() OptString {
-	return s.ID
-}
-
-// GetName returns the value of Name.
-func (s *V1SignupUser) GetName() OptString {
-	return s.Name
-}
-
-// GetEmail returns the value of Email.
-func (s *V1SignupUser) GetEmail() OptString {
-	return s.Email
-}
-
-// SetID sets the value of ID.
-func (s *V1SignupUser) SetID(val OptString) {
-	s.ID = val
-}
-
-// SetName sets the value of Name.
-func (s *V1SignupUser) SetName(val OptString) {
-	s.Name = val
-}
-
-// SetEmail sets the value of Email.
-func (s *V1SignupUser) SetEmail(val OptString) {
-	s.Email = val
-}
-
-// Ref: #/components/schemas/V1User
-type V1User struct {
-	ID    OptString `json:"id"`
-	Name  OptString `json:"name"`
-	Email OptString `json:"email"`
-}
-
-// GetID returns the value of ID.
-func (s *V1User) GetID() OptString {
-	return s.ID
-}
-
-// GetName returns the value of Name.
-func (s *V1User) GetName() OptString {
-	return s.Name
-}
-
-// GetEmail returns the value of Email.
-func (s *V1User) GetEmail() OptString {
-	return s.Email
-}
-
-// SetID sets the value of ID.
-func (s *V1User) SetID(val OptString) {
-	s.ID = val
-}
-
-// SetName sets the value of Name.
-func (s *V1User) SetName(val OptString) {
-	s.Name = val
-}
-
-// SetEmail sets the value of Email.
-func (s *V1User) SetEmail(val OptString) {
-	s.Email = val
-}
-
-func (*V1User) v1GetUserByIDRes() {}
-
-type V1Users []V1User
-
-func (*V1Users) v1GetUserListRes() {}

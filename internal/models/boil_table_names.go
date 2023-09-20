@@ -4,9 +4,15 @@
 package models
 
 var TableNames = struct {
+	AccessTokens     string
+	Otp              string
+	RefreshTokens    string
 	SchemaMigrations string
 	Users            string
 }{
+	AccessTokens:     "access_tokens",
+	Otp:              "otp",
+	RefreshTokens:    "refresh_tokens",
 	SchemaMigrations: "schema_migrations",
 	Users:            "users",
 }

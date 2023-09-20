@@ -20,20 +20,20 @@ import (
 	"github.com/ogen-go/ogen/otelogen"
 )
 
-// handleV1CreateSignupUserRequest handles V1_Create_Signup_User operation.
+// handleV1UsersCreateRequest handles V1_Users_Create operation.
 //
-// Creates a signup user that will later be converted into an actual user.
+// Creates and returns a new user.
 //
-// POST /v1/signup
-func (s *Server) handleV1CreateSignupUserRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+// POST /v1/users
+func (s *Server) handleV1UsersCreateRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("V1_Create_Signup_User"),
+		otelogen.OperationID("V1_Users_Create"),
 		semconv.HTTPMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/v1/signup"),
+		semconv.HTTPRouteKey.String("/v1/users"),
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "V1CreateSignupUser",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "V1UsersCreate",
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -58,11 +58,11 @@ func (s *Server) handleV1CreateSignupUserRequest(args [0]string, argsEscaped boo
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "V1CreateSignupUser",
-			ID:   "V1_Create_Signup_User",
+			Name: "V1UsersCreate",
+			ID:   "V1_Users_Create",
 		}
 	)
-	request, close, err := s.decodeV1CreateSignupUserRequest(r)
+	request, close, err := s.decodeV1UsersCreateRequest(r)
 	if err != nil {
 		err = &ogenerrors.DecodeRequestError{
 			OperationContext: opErrContext,
@@ -78,21 +78,21 @@ func (s *Server) handleV1CreateSignupUserRequest(args [0]string, argsEscaped boo
 		}
 	}()
 
-	var response *V1SignupUser
+	var response V1UsersCreateRes
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:       ctx,
-			OperationName: "V1CreateSignupUser",
-			OperationID:   "V1_Create_Signup_User",
+			OperationName: "V1UsersCreate",
+			OperationID:   "V1_Users_Create",
 			Body:          request,
 			Params:        middleware.Parameters{},
 			Raw:           r,
 		}
 
 		type (
-			Request  = *V1CreateSignupUserReq
+			Request  = *V1UsersCreateReq
 			Params   = struct{}
-			Response = *V1SignupUser
+			Response = V1UsersCreateRes
 		)
 		response, err = middleware.HookMiddleware[
 			Request,
@@ -103,12 +103,12 @@ func (s *Server) handleV1CreateSignupUserRequest(args [0]string, argsEscaped boo
 			mreq,
 			nil,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.V1CreateSignupUser(ctx, request)
+				response, err = s.h.V1UsersCreate(ctx, request)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.V1CreateSignupUser(ctx, request)
+		response, err = s.h.V1UsersCreate(ctx, request)
 	}
 	if err != nil {
 		recordError("Internal", err)
@@ -116,7 +116,7 @@ func (s *Server) handleV1CreateSignupUserRequest(args [0]string, argsEscaped boo
 		return
 	}
 
-	if err := encodeV1CreateSignupUserResponse(response, w, span); err != nil {
+	if err := encodeV1UsersCreateResponse(response, w, span); err != nil {
 		recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)
@@ -125,20 +125,20 @@ func (s *Server) handleV1CreateSignupUserRequest(args [0]string, argsEscaped boo
 	}
 }
 
-// handleV1GetUserByIDRequest handles v1_Get_User_By_ID operation.
+// handleV1UsersMeRequest handles V1_Users_Me operation.
 //
-// Returns a single user.
+// Gets the current user.
 //
-// GET /v1/users/{id}
-func (s *Server) handleV1GetUserByIDRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+// GET /v1/users/me
+func (s *Server) handleV1UsersMeRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("v1_Get_User_By_ID"),
+		otelogen.OperationID("V1_Users_Me"),
 		semconv.HTTPMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/v1/users/{id}"),
+		semconv.HTTPRouteKey.String("/v1/users/me"),
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "V1GetUserByID",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "V1UsersMe",
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -163,41 +163,70 @@ func (s *Server) handleV1GetUserByIDRequest(args [1]string, argsEscaped bool, w 
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "V1GetUserByID",
-			ID:   "v1_Get_User_By_ID",
+			Name: "V1UsersMe",
+			ID:   "V1_Users_Me",
 		}
 	)
-	params, err := decodeV1GetUserByIDParams(args, argsEscaped, r)
-	if err != nil {
-		err = &ogenerrors.DecodeParamsError{
-			OperationContext: opErrContext,
-			Err:              err,
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			sctx, ok, err := s.securityBearerAuth(ctx, "V1UsersMe", r)
+			if err != nil {
+				err = &ogenerrors.SecurityError{
+					OperationContext: opErrContext,
+					Security:         "BearerAuth",
+					Err:              err,
+				}
+				recordError("Security:BearerAuth", err)
+				s.cfg.ErrorHandler(ctx, w, r, err)
+				return
+			}
+			if ok {
+				satisfied[0] |= 1 << 0
+				ctx = sctx
+			}
 		}
-		recordError("DecodeParams", err)
-		s.cfg.ErrorHandler(ctx, w, r, err)
-		return
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			err = &ogenerrors.SecurityError{
+				OperationContext: opErrContext,
+				Err:              ogenerrors.ErrSecurityRequirementIsNotSatisfied,
+			}
+			recordError("Security", err)
+			s.cfg.ErrorHandler(ctx, w, r, err)
+			return
+		}
 	}
 
-	var response V1GetUserByIDRes
+	var response V1UsersMeRes
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:       ctx,
-			OperationName: "V1GetUserByID",
-			OperationID:   "v1_Get_User_By_ID",
+			OperationName: "V1UsersMe",
+			OperationID:   "V1_Users_Me",
 			Body:          nil,
-			Params: middleware.Parameters{
-				{
-					Name: "id",
-					In:   "path",
-				}: params.ID,
-			},
-			Raw: r,
+			Params:        middleware.Parameters{},
+			Raw:           r,
 		}
 
 		type (
 			Request  = struct{}
-			Params   = V1GetUserByIDParams
-			Response = V1GetUserByIDRes
+			Params   = struct{}
+			Response = V1UsersMeRes
 		)
 		response, err = middleware.HookMiddleware[
 			Request,
@@ -206,14 +235,14 @@ func (s *Server) handleV1GetUserByIDRequest(args [1]string, argsEscaped bool, w 
 		](
 			m,
 			mreq,
-			unpackV1GetUserByIDParams,
+			nil,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.V1GetUserByID(ctx, params)
+				response, err = s.h.V1UsersMe(ctx)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.V1GetUserByID(ctx, params)
+		response, err = s.h.V1UsersMe(ctx)
 	}
 	if err != nil {
 		recordError("Internal", err)
@@ -221,7 +250,7 @@ func (s *Server) handleV1GetUserByIDRequest(args [1]string, argsEscaped bool, w 
 		return
 	}
 
-	if err := encodeV1GetUserByIDResponse(response, w, span); err != nil {
+	if err := encodeV1UsersMeResponse(response, w, span); err != nil {
 		recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)
@@ -230,20 +259,20 @@ func (s *Server) handleV1GetUserByIDRequest(args [1]string, argsEscaped bool, w 
 	}
 }
 
-// handleV1GetUserListRequest handles v1_Get_User_List operation.
+// handleV1UsersMeUpdateRequest handles V1_Users_Me_Update operation.
 //
-// Returns a single user.
+// Updates the user.
 //
-// GET /v1/users
-func (s *Server) handleV1GetUserListRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+// PATCH /v1/users/me
+func (s *Server) handleV1UsersMeUpdateRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("v1_Get_User_List"),
-		semconv.HTTPMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/v1/users"),
+		otelogen.OperationID("V1_Users_Me_Update"),
+		semconv.HTTPMethodKey.String("PATCH"),
+		semconv.HTTPRouteKey.String("/v1/users/me"),
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "V1GetUserList",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "V1UsersMeUpdate",
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -266,15 +295,63 @@ func (s *Server) handleV1GetUserListRequest(args [0]string, argsEscaped bool, w 
 			span.SetStatus(codes.Error, stage)
 			s.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 		}
-		err error
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "V1UsersMeUpdate",
+			ID:   "V1_Users_Me_Update",
+		}
 	)
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			sctx, ok, err := s.securityBearerAuth(ctx, "V1UsersMeUpdate", r)
+			if err != nil {
+				err = &ogenerrors.SecurityError{
+					OperationContext: opErrContext,
+					Security:         "BearerAuth",
+					Err:              err,
+				}
+				recordError("Security:BearerAuth", err)
+				s.cfg.ErrorHandler(ctx, w, r, err)
+				return
+			}
+			if ok {
+				satisfied[0] |= 1 << 0
+				ctx = sctx
+			}
+		}
 
-	var response V1GetUserListRes
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			err = &ogenerrors.SecurityError{
+				OperationContext: opErrContext,
+				Err:              ogenerrors.ErrSecurityRequirementIsNotSatisfied,
+			}
+			recordError("Security", err)
+			s.cfg.ErrorHandler(ctx, w, r, err)
+			return
+		}
+	}
+
+	var response V1UsersMeUpdateRes
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:       ctx,
-			OperationName: "V1GetUserList",
-			OperationID:   "v1_Get_User_List",
+			OperationName: "V1UsersMeUpdate",
+			OperationID:   "V1_Users_Me_Update",
 			Body:          nil,
 			Params:        middleware.Parameters{},
 			Raw:           r,
@@ -283,7 +360,7 @@ func (s *Server) handleV1GetUserListRequest(args [0]string, argsEscaped bool, w 
 		type (
 			Request  = struct{}
 			Params   = struct{}
-			Response = V1GetUserListRes
+			Response = V1UsersMeUpdateRes
 		)
 		response, err = middleware.HookMiddleware[
 			Request,
@@ -294,12 +371,12 @@ func (s *Server) handleV1GetUserListRequest(args [0]string, argsEscaped bool, w 
 			mreq,
 			nil,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.V1GetUserList(ctx)
+				response, err = s.h.V1UsersMeUpdate(ctx)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.V1GetUserList(ctx)
+		response, err = s.h.V1UsersMeUpdate(ctx)
 	}
 	if err != nil {
 		recordError("Internal", err)
@@ -307,7 +384,7 @@ func (s *Server) handleV1GetUserListRequest(args [0]string, argsEscaped bool, w 
 		return
 	}
 
-	if err := encodeV1GetUserListResponse(response, w, span); err != nil {
+	if err := encodeV1UsersMeUpdateResponse(response, w, span); err != nil {
 		recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)

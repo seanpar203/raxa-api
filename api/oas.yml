@@ -1,7 +1,7 @@
 openapi: 3.0.2
 
 servers:
-  - url: /v3
+  - url: /v1
 
 info:
   version: 1.0.0
@@ -15,70 +15,76 @@ tags:
     description: Everything related to users
 
 paths:
-  /v1/signup:
-    post:
-      summary: Creating a signup user
-      description: Creates a signup user that will later be converted into an actual user.
-      operationId: V1_Create_Signup_User
-      requestBody:
-        $ref: "#/components/requestBodies/V1CreateSignupUser"
-      responses:
-        '200':
-          description: Response for creating a new signup user
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/V1SignupUser"
   /v1/users:
+    post:
+      tags:
+        - users
+      summary: Creates a new user
+      description: Creates and returns a new user
+      operationId: V1_Users_Create
+      requestBody:
+        $ref: "#/components/requestBodies/V1CreateUserRequest"
+      responses:
+        '200':
+          $ref: "#/components/responses/V1CreateUserResponse"
+        '400':
+          $ref: "#/components/responses/V1ErrorResponse"
+  
+  /v1/users/me:
     get:
       tags:
         - users
-      summary: Returns a list of users
-      description: Returns a single user
-      operationId: v1_Get_User_List
+      security:
+        - bearerAuth: []
+      summary: Gets the current user
+      description: Gets the current user
+      operationId: V1_Users_Me
       responses:
         '200':
-          description: Response for getting a single user
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/V1Users"
-        default:
-          description: User not found
-
-  /v1/users/{id}:
-    get:
-      tags:
-        - users
-      summary: Get user by ID
-      description: Returns a single user
-      operationId: v1_Get_User_By_ID
-      parameters:
-        - name: id
-          in: path
-          description: ID of user to return
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: Response for getting a single user
+          description: Error response
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/V1User"
-        default:
-          description: Pet not found
-  
+        '400':
+          $ref: "#/components/responses/V1ErrorResponse"      
+    patch:
+      tags:
+        - users
+      security:
+        - bearerAuth: []
+      summary: Updates the user
+      description: Updates the user
+      operationId: V1_Users_Me_Update
+      responses:
+        '200':
+          $ref: "#/components/responses/V1CreateUserResponse"
+        '400':
+          $ref: "#/components/responses/V1ErrorResponse"
+
 components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: UUID
+
   schemas:
+
+    UUID:
+      type: string
+      example: "0c589d81-a70b-4e5d-81e9-4251ab97d2d0"
+
     V1User:
       type: object
+      required:
+        - id
+        - name
+        - email
       properties:
         id:
-          type: string
-          example: "0c589d81-a70b-4e5d-81e9-4251ab97d2d0"
+          $ref: '#/components/schemas/UUID'
         name:
           type: string
           example: "John Doe"
@@ -93,32 +99,62 @@ components:
 
     V1SignupUser:
       type: object
+      required:
+        - id
+        - name
+        - email
       properties:
         id:
-          type: string
-          example: "0c589d81-a70b-4e5d-81e9-4251ab97d2d0"
+          $ref: '#/components/schemas/UUID'
         name:
           type: string
           example: "John Doe"
         email:
           type: string
           example: "john@doe.com" 
+  
+  responses:
+    V1ErrorResponse:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - message
+            properties:
+              message:
+                type: string
+            
+    V1CreateUserResponse:
+      description: Response for creating a new user
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - access_token
+              - refresh_token
+              - user
+            properties:
+              access_token:
+                $ref: '#/components/schemas/UUID'
+              refresh_token:
+                $ref: '#/components/schemas/UUID'
+              user:
+                $ref: '#/components/schemas/V1User'
 
   requestBodies:
-    V1CreateSignupUser:
+    V1CreateUserRequest:
       required: true
       content:
         application/json:
           schema:
             type: object
             required:
-              - name
               - email
               - password
             properties:
-              name:
-                type: string
-                example: "John Doe"
               email:
                 type: string
                 format: email

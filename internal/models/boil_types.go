@@ -50,3 +50,31 @@ func makeCacheKey(cols boil.Columns, nzDefaults []string) string {
 	strmangle.PutBuffer(buf)
 	return str
 }
+
+type OtpChannel string
+
+// Enum values for OtpChannel
+const (
+	OtpChannelSMS   OtpChannel = "sms"
+	OtpChannelEmail OtpChannel = "email"
+)
+
+func AllOtpChannel() []OtpChannel {
+	return []OtpChannel{
+		OtpChannelSMS,
+		OtpChannelEmail,
+	}
+}
+
+func (e OtpChannel) IsValid() error {
+	switch e {
+	case OtpChannelSMS, OtpChannelEmail:
+		return nil
+	default:
+		return errors.New("enum is not valid")
+	}
+}
+
+func (e OtpChannel) String() string {
+	return string(e)
+}
