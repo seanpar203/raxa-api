@@ -33,9 +33,9 @@ func (UnimplementedHandler) V1UsersMe(ctx context.Context) (r V1UsersMeRes, _ er
 
 // V1UsersMeUpdate implements V1_Users_Me_Update operation.
 //
-// Updates the user.
+// Updates the current user.
 //
 // PATCH /v1/users/me
-func (UnimplementedHandler) V1UsersMeUpdate(ctx context.Context) (r V1UsersMeUpdateRes, _ error) {
+func (UnimplementedHandler) V1UsersMeUpdate(ctx context.Context, req OptV1UsersMeUpdateReq) (r V1UsersMeUpdateRes, _ error) {
 	return r, ht.ErrNotImplemented
 }

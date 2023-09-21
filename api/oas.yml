@@ -36,12 +36,12 @@ paths:
         - users
       security:
         - bearerAuth: []
-      summary: Gets the current user
+      summary: Gets the current logged in user
       description: Gets the current user
       operationId: V1_Users_Me
       responses:
         '200':
-          description: Error response
+          description: Returns the user that is currently logged in
           content:
             application/json:
               schema:
@@ -53,12 +53,18 @@ paths:
         - users
       security:
         - bearerAuth: []
-      summary: Updates the user
-      description: Updates the user
+      summary: Updates the current logged in user
+      description: Updates the current user
       operationId: V1_Users_Me_Update
+      requestBody:
+        $ref: "#/components/requestBodies/V1UpdateUserRequest"
       responses:
         '200':
-          $ref: "#/components/responses/V1CreateUserResponse"
+          description: Returns the user that was just updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/V1User"
         '400':
           $ref: "#/components/responses/V1ErrorResponse"
 
@@ -96,22 +102,6 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/V1User'
-
-    V1SignupUser:
-      type: object
-      required:
-        - id
-        - name
-        - email
-      properties:
-        id:
-          $ref: '#/components/schemas/UUID'
-        name:
-          type: string
-          example: "John Doe"
-        email:
-          type: string
-          example: "john@doe.com" 
   
   responses:
     V1ErrorResponse:
@@ -145,6 +135,16 @@ components:
                 $ref: '#/components/schemas/V1User'
 
   requestBodies:
+    V1UpdateUserRequest:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+
     V1CreateUserRequest:
       required: true
       content:

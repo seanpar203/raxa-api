@@ -9,6 +9,8 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
+
+	"github.com/seanpar203/go-api/internal/models"
 )
 
 var (
@@ -76,6 +78,23 @@ func GetRequestLogger(r *http.Request) *zerolog.Logger {
 // It returns a pointer to a zerolog.Logger.
 func GetAuthLogger() *zerolog.Logger {
 	l := getLogger().With().Str("service", "auth").Logger()
+
+	return &l
+}
+
+// AddUserToLogger adds the user ID to the logger and returns a new logger instance.
+//
+// It takes the following parameters:
+// - logger: a pointer to a zerolog.Logger instance.
+// - user: a pointer to a models.User instance.
+//
+// It returns a pointer to a zerolog.Logger instance.
+func AddUserToLogger(logger *zerolog.Logger, user *models.User) *zerolog.Logger {
+	l := logger.With().Logger()
+
+	l.UpdateContext(func(c zerolog.Context) zerolog.Context {
+		return c.Str("user_id", user.ID)
+	})
 
 	return &l
 }

@@ -2,13 +2,21 @@ package api
 
 import (
 	"context"
-	"errors"
 
-	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/null/v8"
 
 	"github.com/seanpar203/go-api/internal/api/oas"
 	"github.com/seanpar203/go-api/internal/common"
+	"github.com/seanpar203/go-api/internal/models"
 )
+
+func mapUserToV1User(user *models.User) *oas.V1User {
+	return &oas.V1User{
+		ID:    oas.UUID(user.ID),
+		Name:  user.Name.String,
+		Email: user.Email,
+	}
+}
 
 // V1CreateSignupUser implements V1_Create_Signup_User operation.
 //
@@ -20,12 +28,6 @@ func (api *API) V1UsersCreate(ctx context.Context, req *oas.V1UsersCreateReq) (o
 	logger := common.LoggerFromContext(ctx)
 
 	var errRes = &oas.V1ErrorResponse{Message: "unable to create user"}
-
-	tx, err := boil.BeginTx(ctx, nil)
-
-	if err != nil {
-		return errRes, err
-	}
 
 	user, err := api.Svcs.User.CreateUser(ctx, req.Email, req.Password)
 
@@ -45,19 +47,12 @@ func (api *API) V1UsersCreate(ctx context.Context, req *oas.V1UsersCreateReq) (o
 		return errRes, err
 	}
 
-	if err := tx.Commit(); err != nil {
-		return errRes, err
-	}
-
 	logger.Info().Msg("user created")
 
 	return &oas.V1CreateUserResponse{
+		User:         *mapUserToV1User(user),
 		AccessToken:  oas.UUID(at.Token),
 		RefreshToken: oas.UUID(rt.Token),
-		User: oas.V1User{
-			ID:    oas.UUID(user.ID),
-			Email: user.Email,
-		},
 	}, nil
 }
 
@@ -67,16 +62,9 @@ func (api *API) V1UsersCreate(ctx context.Context, req *oas.V1UsersCreateReq) (o
 //
 // GET /v1/users/me
 func (api *API) V1UsersMe(ctx context.Context) (oas.V1UsersMeRes, error) {
-	user, err := common.UserFromContext(ctx)
+	user, _ := common.UserFromContext(ctx)
 
-	if err != nil {
-		return &oas.V1ErrorResponse{}, errors.New("unable to authenticate")
-	}
-
-	return &oas.V1User{
-		ID:    oas.UUID(user.ID),
-		Email: user.Email,
-	}, nil
+	return mapUserToV1User(user), nil
 }
 
 // V1UsersMeUpdate implements V1_Users_Me_Update operation.
@@ -84,6 +72,24 @@ func (api *API) V1UsersMe(ctx context.Context) (oas.V1UsersMeRes, error) {
 // Updates the user.
 //
 // PATCH /v1/users/me
-func (api *API) V1UsersMeUpdate(ctx context.Context) (oas.V1UsersMeUpdateRes, error) {
-	return nil, nil
+func (api *API) V1UsersMeUpdate(ctx context.Context, req oas.OptV1UsersMeUpdateReq) (oas.V1UsersMeUpdateRes, error) {
+	user, _ := common.UserFromContext(ctx)
+
+	if !req.IsSet() || (!req.Value.Name.IsSet()) {
+		return mapUserToV1User(user), nil
+	}
+
+	logger := common.LoggerFromContext(ctx)
+
+	if req.Value.Name.IsSet() {
+		user.Name = null.StringFrom(req.Value.Name.Value)
+	}
+
+	user, err := api.Svcs.User.UpdateUser(ctx, user)
+
+	if err != nil {
+		logger.Err(err).Msg("unable to update user")
+	}
+
+	return mapUserToV1User(user), nil
 }

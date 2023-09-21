@@ -261,7 +261,7 @@ func (s *Server) handleV1UsersMeRequest(args [0]string, argsEscaped bool, w http
 
 // handleV1UsersMeUpdateRequest handles V1_Users_Me_Update operation.
 //
-// Updates the user.
+// Updates the current user.
 //
 // PATCH /v1/users/me
 func (s *Server) handleV1UsersMeUpdateRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
@@ -345,6 +345,21 @@ func (s *Server) handleV1UsersMeUpdateRequest(args [0]string, argsEscaped bool, 
 			return
 		}
 	}
+	request, close, err := s.decodeV1UsersMeUpdateRequest(r)
+	if err != nil {
+		err = &ogenerrors.DecodeRequestError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		recordError("DecodeRequest", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+	defer func() {
+		if err := close(); err != nil {
+			recordError("CloseRequest", err)
+		}
+	}()
 
 	var response V1UsersMeUpdateRes
 	if m := s.cfg.Middleware; m != nil {
@@ -352,13 +367,13 @@ func (s *Server) handleV1UsersMeUpdateRequest(args [0]string, argsEscaped bool, 
 			Context:       ctx,
 			OperationName: "V1UsersMeUpdate",
 			OperationID:   "V1_Users_Me_Update",
-			Body:          nil,
+			Body:          request,
 			Params:        middleware.Parameters{},
 			Raw:           r,
 		}
 
 		type (
-			Request  = struct{}
+			Request  = OptV1UsersMeUpdateReq
 			Params   = struct{}
 			Response = V1UsersMeUpdateRes
 		)
@@ -371,12 +386,12 @@ func (s *Server) handleV1UsersMeUpdateRequest(args [0]string, argsEscaped bool, 
 			mreq,
 			nil,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.V1UsersMeUpdate(ctx)
+				response, err = s.h.V1UsersMeUpdate(ctx, request)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.V1UsersMeUpdate(ctx)
+		response, err = s.h.V1UsersMeUpdate(ctx, request)
 	}
 	if err != nil {
 		recordError("Internal", err)

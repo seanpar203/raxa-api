@@ -264,16 +264,16 @@ func (c *Client) sendV1UsersMe(ctx context.Context) (res V1UsersMeRes, err error
 
 // V1UsersMeUpdate invokes V1_Users_Me_Update operation.
 //
-// Updates the user.
+// Updates the current user.
 //
 // PATCH /v1/users/me
-func (c *Client) V1UsersMeUpdate(ctx context.Context) (V1UsersMeUpdateRes, error) {
-	res, err := c.sendV1UsersMeUpdate(ctx)
+func (c *Client) V1UsersMeUpdate(ctx context.Context, request OptV1UsersMeUpdateReq) (V1UsersMeUpdateRes, error) {
+	res, err := c.sendV1UsersMeUpdate(ctx, request)
 	_ = res
 	return res, err
 }
 
-func (c *Client) sendV1UsersMeUpdate(ctx context.Context) (res V1UsersMeUpdateRes, err error) {
+func (c *Client) sendV1UsersMeUpdate(ctx context.Context, request OptV1UsersMeUpdateReq) (res V1UsersMeUpdateRes, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("V1_Users_Me_Update"),
 		semconv.HTTPMethodKey.String("PATCH"),
@@ -317,6 +317,9 @@ func (c *Client) sendV1UsersMeUpdate(ctx context.Context) (res V1UsersMeUpdateRe
 	r, err := ht.NewRequest(ctx, "PATCH", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeV1UsersMeUpdateRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
 	}
 
 	{

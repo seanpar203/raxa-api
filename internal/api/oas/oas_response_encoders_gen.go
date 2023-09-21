@@ -79,7 +79,7 @@ func encodeV1UsersMeResponse(response V1UsersMeRes, w http.ResponseWriter, span 
 
 func encodeV1UsersMeUpdateResponse(response V1UsersMeUpdateRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
-	case *V1CreateUserResponse:
+	case *V1User:
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
 		span.SetStatus(codes.Ok, http.StatusText(200))

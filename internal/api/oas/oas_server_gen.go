@@ -22,10 +22,10 @@ type Handler interface {
 	V1UsersMe(ctx context.Context) (V1UsersMeRes, error)
 	// V1UsersMeUpdate implements V1_Users_Me_Update operation.
 	//
-	// Updates the user.
+	// Updates the current user.
 	//
 	// PATCH /v1/users/me
-	V1UsersMeUpdate(ctx context.Context) (V1UsersMeUpdateRes, error)
+	V1UsersMeUpdate(ctx context.Context, req OptV1UsersMeUpdateReq) (V1UsersMeUpdateRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

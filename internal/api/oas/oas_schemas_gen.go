@@ -16,6 +16,98 @@ func (s *BearerAuth) SetToken(val string) {
 	s.Token = val
 }
 
+// NewOptString returns new OptString with value set to v.
+func NewOptString(v string) OptString {
+	return OptString{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptString is optional string.
+type OptString struct {
+	Value string
+	Set   bool
+}
+
+// IsSet returns true if OptString was set.
+func (o OptString) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptString) Reset() {
+	var v string
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptString) SetTo(v string) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptString) Get() (v string, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptString) Or(d string) string {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptV1UsersMeUpdateReq returns new OptV1UsersMeUpdateReq with value set to v.
+func NewOptV1UsersMeUpdateReq(v V1UsersMeUpdateReq) OptV1UsersMeUpdateReq {
+	return OptV1UsersMeUpdateReq{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptV1UsersMeUpdateReq is optional V1UsersMeUpdateReq.
+type OptV1UsersMeUpdateReq struct {
+	Value V1UsersMeUpdateReq
+	Set   bool
+}
+
+// IsSet returns true if OptV1UsersMeUpdateReq was set.
+func (o OptV1UsersMeUpdateReq) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptV1UsersMeUpdateReq) Reset() {
+	var v V1UsersMeUpdateReq
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptV1UsersMeUpdateReq) SetTo(v V1UsersMeUpdateReq) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptV1UsersMeUpdateReq) Get() (v V1UsersMeUpdateReq, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptV1UsersMeUpdateReq) Or(d V1UsersMeUpdateReq) V1UsersMeUpdateReq {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 type UUID string
 
 type V1CreateUserResponse struct {
@@ -54,8 +146,7 @@ func (s *V1CreateUserResponse) SetUser(val V1User) {
 	s.User = val
 }
 
-func (*V1CreateUserResponse) v1UsersCreateRes()   {}
-func (*V1CreateUserResponse) v1UsersMeUpdateRes() {}
+func (*V1CreateUserResponse) v1UsersCreateRes() {}
 
 type V1ErrorResponse struct {
 	Message string `json:"message"`
@@ -112,7 +203,8 @@ func (s *V1User) SetEmail(val string) {
 	s.Email = val
 }
 
-func (*V1User) v1UsersMeRes() {}
+func (*V1User) v1UsersMeRes()       {}
+func (*V1User) v1UsersMeUpdateRes() {}
 
 type V1UsersCreateReq struct {
 	Email    string `json:"email"`
@@ -137,4 +229,18 @@ func (s *V1UsersCreateReq) SetEmail(val string) {
 // SetPassword sets the value of Password.
 func (s *V1UsersCreateReq) SetPassword(val string) {
 	s.Password = val
+}
+
+type V1UsersMeUpdateReq struct {
+	Name OptString `json:"name"`
+}
+
+// GetName returns the value of Name.
+func (s *V1UsersMeUpdateReq) GetName() OptString {
+	return s.Name
+}
+
+// SetName sets the value of Name.
+func (s *V1UsersMeUpdateReq) SetName(val OptString) {
+	s.Name = val
 }

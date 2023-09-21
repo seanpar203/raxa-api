@@ -2,6 +2,9 @@ package api
 
 import (
 	"context"
+	"errors"
+
+	"github.com/google/uuid"
 
 	"github.com/seanpar203/go-api/internal/api/oas"
 	"github.com/seanpar203/go-api/internal/common"
@@ -12,6 +15,9 @@ import (
 // It takes a context, the operation name, and a bearer authentication token as parameters.
 // It returns the modified context and an error.
 func (api *API) HandleBearerAuth(ctx context.Context, operationName string, t oas.BearerAuth) (context.Context, error) {
+	if _, err := uuid.Parse(t.Token); err != nil {
+		return ctx, errors.New("invalid token")
+	}
 
 	logger := common.GetAuthLogger().With().Str("access_token", t.Token).Logger()
 

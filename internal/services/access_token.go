@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"time"
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	. "github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -18,7 +19,8 @@ type accessToken struct{}
 // Returns the newly created access token and any error encountered.
 func (svc *accessToken) CreateToken(ctx context.Context, user *models.User) (*models.AccessToken, error) {
 	token := &models.AccessToken{
-		UserID: user.ID,
+		UserID:     user.ID,
+		ValidUntil: time.Now().Add(time.Hour * 24),
 	}
 
 	if err := token.InsertG(ctx, boil.Infer()); err != nil {
@@ -33,5 +35,20 @@ func (svc *accessToken) CreateToken(ctx context.Context, user *models.User) (*mo
 // It takes a context.Context as the first parameter and a token string as the second parameter.
 // It returns a pointer to models.AccessToken and an error.
 func (svc *accessToken) GetByToken(ctx context.Context, token string) (*models.AccessToken, error) {
-	return models.AccessTokens(Load(models.AccessTokenRels.User), models.AccessTokenWhere.Token.EQ(token)).OneG(ctx)
+	at, err := models.AccessTokens(
+		Load(models.AccessTokenRels.User),
+		models.AccessTokenWhere.Token.EQ(token)).
+		OneG(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+
+	if now.After(at.ValidUntil) {
+		return nil, ErrAccessTokenExpired
+	}
+
+	return at, nil
 }

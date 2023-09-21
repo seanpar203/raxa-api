@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"errors"
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
@@ -11,14 +10,6 @@ import (
 )
 
 type user struct{}
-
-var (
-	ErrUnableToGetUser      = errors.New("unable to get user")
-	ErrUserAlreadyExists    = errors.New("user already exists")
-	ErrUnableToCreateUser   = errors.New("unable to create user")
-	ErrInvalidEmailAddress  = errors.New("invalid email address")
-	ErrUserPasswordTooShort = errors.New("password must be at least 8 characters")
-)
 
 // CreateUser creates a new user with the given email and password.
 //
@@ -68,6 +59,24 @@ func (svc *user) CreateUser(ctx context.Context, email string, password string) 
 	return user, nil
 }
 
+// UpdateUser updates a user in the database.
+//
+// ctx: the context.Context to be used for the database operation.
+// user: the user model to be updated.
+// Returns the updated user model and an error, if any.
+func (svc *user) UpdateUser(ctx context.Context, u *models.User) (*models.User, error) {
+
+	if _, err := u.UpdateG(ctx, boil.Blacklist("id", "password")); err != nil {
+		return u, ErrrUnableToUpdateUser
+	}
+
+	return u, nil
+}
+
+func (svc *user) GetByEmail(ctx context.Context, email string) (*models.User, error) {
+	return models.Users(models.UserWhere.Email.EQ(email)).OneG(ctx)
+}
+
 // GetUserFromAccessToken retrieves a user using an access token.
 //
 // The function takes in the context and the access token as parameters.
@@ -76,7 +85,7 @@ func (svc *user) GetUserFromAccessToken(ctx context.Context, token string) (*mod
 	at, err := accessTokenSvc.GetByToken(ctx, token)
 
 	if err != nil {
-		return nil, ErrUnableToGetUser
+		return nil, err
 	}
 
 	return at.R.User, nil

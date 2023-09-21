@@ -182,7 +182,7 @@ func decodeV1UsersMeUpdateResponse(resp *http.Response) (res V1UsersMeUpdateRes,
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response V1CreateUserResponse
+			var response V1User
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
