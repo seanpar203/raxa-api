@@ -7,6 +7,7 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	. "github.com/volatiletech/sqlboiler/v4/queries/qm"
 
+	"github.com/seanpar203/go-api/internal/env"
 	"github.com/seanpar203/go-api/internal/models"
 )
 
@@ -20,7 +21,7 @@ func (svc *refreshToken) CreateToken(ctx context.Context, user *models.User) (*m
 
 	token := &models.RefreshToken{
 		UserID:     user.ID,
-		ValidUntil: time.Now().Add(time.Hour * 24 * 7),
+		ValidUntil: time.Now().Add(env.REFRESH_TOKEN_EXPIRATION),
 	}
 
 	if err := token.InsertG(ctx, boil.Infer()); err != nil {

@@ -1,6 +1,7 @@
 package common
 
 import (
+	"bytes"
 	"io"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 
+	"github.com/seanpar203/go-api/internal/env"
 	"github.com/seanpar203/go-api/internal/models"
 )
 
@@ -32,14 +34,12 @@ func getLogger() *zerolog.Logger {
 		zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 		zerolog.TimeFieldFormat = time.RFC3339Nano
 
-		if GetEnv("APP_ENV", "dev") != "dev" {
+		if env.APP_ENV != "dev" {
 			output = os.Stderr
 		}
 
-		level := GetEnvAsInt("LOG_LEVEL", 1)
-
 		l := zerolog.New(output).
-			Level(zerolog.Level(level)).
+			Level(zerolog.Level(env.LOG_LEVEL)).
 			With().
 			Timestamp().
 			Caller().
@@ -80,6 +80,14 @@ func GetAuthLogger() *zerolog.Logger {
 	l := getLogger().With().Str("service", "auth").Logger()
 
 	return &l
+}
+
+func GetTestLogger() (*zerolog.Logger, *bytes.Buffer) {
+	out := &bytes.Buffer{}
+
+	l := zerolog.New(out)
+
+	return &l, out
 }
 
 // AddUserToLogger adds the user ID to the logger and returns a new logger instance.

@@ -13,6 +13,42 @@ type UnimplementedHandler struct{}
 
 var _ Handler = UnimplementedHandler{}
 
+// V1AuthLogin implements V1_Auth_login operation.
+//
+// Returns a new access token with a new expiration date.
+//
+// POST /v1/auth/login
+func (UnimplementedHandler) V1AuthLogin(ctx context.Context, req *V1AuthLoginReq) (r V1AuthLoginRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// V1AuthRefresh implements V1_Auth_Refresh operation.
+//
+// Returns a new access token with a new expiration date.
+//
+// POST /v1/auth/refresh
+func (UnimplementedHandler) V1AuthRefresh(ctx context.Context, req *V1AuthRefreshReq) (r V1AuthRefreshRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// V1OTPCodeEnter implements V1_OTP_Code_Enter operation.
+//
+// Validates the user for the given code.
+//
+// POST /v1/otp/enter
+func (UnimplementedHandler) V1OTPCodeEnter(ctx context.Context, req *V1OTPCodeEnterReq) (r V1OTPCodeEnterRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// V1OTPCodeSend implements V1_OTP_Code_Send operation.
+//
+// Send a 5 digit OTP code to the phone number associate to the user.
+//
+// POST /v1/otp/send
+func (UnimplementedHandler) V1OTPCodeSend(ctx context.Context, req *V1OTPCodeSendReq) (r V1OTPCodeSendRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // V1UsersCreate implements V1_Users_Create operation.
 //
 // Creates and returns a new user.
@@ -38,4 +74,12 @@ func (UnimplementedHandler) V1UsersMe(ctx context.Context) (r V1UsersMeRes, _ er
 // PATCH /v1/users/me
 func (UnimplementedHandler) V1UsersMeUpdate(ctx context.Context, req OptV1UsersMeUpdateReq) (r V1UsersMeUpdateRes, _ error) {
 	return r, ht.ErrNotImplemented
+}
+
+// NewError creates *V1ErrorResponseStatusCode from error returned by handler.
+//
+// Used for common default response.
+func (UnimplementedHandler) NewError(ctx context.Context, err error) (r *V1ErrorResponseStatusCode) {
+	r = new(V1ErrorResponseStatusCode)
+	return r
 }

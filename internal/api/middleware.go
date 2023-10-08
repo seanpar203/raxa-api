@@ -2,9 +2,11 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/ogen-go/ogen/middleware"
+	"github.com/rs/zerolog"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
 	"github.com/seanpar203/go-api/internal/common"
@@ -13,6 +15,7 @@ import (
 var Middlewares = []middleware.Middleware{
 	RequestLoggerMiddleware(),
 	AtomicRequestsMiddleware(),
+	RecoveryMiddleware(),
 }
 
 // RequestLoggerMiddleware is a middleware function that logs information about incoming requests.
@@ -62,5 +65,23 @@ func AtomicRequestsMiddleware() middleware.Middleware {
 		}
 
 		return res, err
+	}
+}
+
+// RecoveryMiddleware returns a middleware that recovers from panics.
+//
+// The middleware takes in a request and a next function as parameters.
+// It returns a response and an error.
+func RecoveryMiddleware() middleware.Middleware {
+	return func(req middleware.Request, next middleware.Next) (middleware.Response, error) {
+
+		defer func() {
+			if err := recover(); err != nil {
+				logger := common.LoggerFromContext(req.Context)
+				logger.WithLevel(zerolog.PanicLevel).Msg(fmt.Sprintf("panic: %v", err))
+			}
+		}()
+
+		return next(req)
 	}
 }

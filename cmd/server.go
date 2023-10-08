@@ -4,12 +4,15 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/seanpar203/go-api/internal/api"
+	"github.com/seanpar203/go-api/internal/env"
 )
 
 var migrateFlag = "migrate"
@@ -35,10 +38,27 @@ var serverCmd = &cobra.Command{
 		if err != nil {
 			log.Panic().Msg(err.Error())
 		}
+		
+		mux := http.NewServeMux()
+
+		mux.Handle("/v1/", svc)
+
+		if env.APP_ENV == "dev" {
+			mediaHandler := http.StripPrefix(env.MEDIA_ENDPOINT, http.FileServer(http.Dir(env.MEDIA_DIR)))
+			mux.Handle(env.MEDIA_ENDPOINT, mediaHandler)
+		}
 
 		log.Info().Msg("Starting our server")
 
-		if err := http.ListenAndServe(":8080", svc); err != nil {
+		srv := &http.Server{
+			Addr:         fmt.Sprintf(":%s", env.SERVER_PORT),
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 10 * time.Second,
+			IdleTimeout:  120 * time.Second,
+			Handler:      mux,
+		}
+
+		if err := srv.ListenAndServe(); err != nil {
 			log.Fatal().Msg(err.Error())
 		}
 	},

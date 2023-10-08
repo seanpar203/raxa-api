@@ -21,5 +21,10 @@ func New() (*oas.Server, error) {
 
 	api := &API{Svcs: svcs}
 
-	return oas.NewServer(api, api, oas.WithMiddleware(Middlewares...))
+	return oas.NewServer(
+		api,
+		api,
+		oas.WithMiddleware(Middlewares...),
+		oas.WithErrorHandler(ErrorHandler),
+	)
 }

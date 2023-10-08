@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/seanpar203/go-api/internal/common"
+	"github.com/seanpar203/go-api/internal/env"
 )
 
 var (
@@ -56,19 +56,17 @@ func (cfg *pgConfig) connect() (*sql.DB, error) {
 // Returns a pgConfig struct.
 func getPgConfigFromEnv() pgConfig {
 	return pgConfig{
-		host:    common.GetEnv("PSQL_HOST", "localhost"),
-		port:    common.GetEnvAsInt("PSQL_PORT", 5432),
-		user:    common.GetEnv("PSQL_USER", "postgres"),
-		pass:    common.GetEnv("PSQL_PASS", "postgres"),
-		dbname:  common.GetEnv("PSQL_DBNAME", "go_api"),
-		sslmode: common.GetEnv("PSQL_SSLMODE", "disable"),
-
-		maxOpenConns:    common.GetEnvAsInt("PSQL_MAX_OPEN_CONNS", 10),
-		maxIdleConns:    common.GetEnvAsInt("PSQL_MAX_IDLE_CONNS", 10),
-		connMaxLifetime: time.Duration(common.GetEnvAsInt("PSQL_CONN_MAX_LIFETIME", 60)) * time.Second,
+		host:            env.PSQL_HOST,
+		port:            env.PSQL_PORT,
+		user:            env.PSQL_USER,
+		pass:            env.PSQL_PASS,
+		dbname:          env.PSQL_DBNAME,
+		sslmode:         env.PSQL_SSQLMODE,
+		maxOpenConns:    env.PSQL_MAX_OPEN_CONNS,
+		maxIdleConns:    env.PSQL_MAX_IDLE_CONNS,
+		connMaxLifetime: env.PSQL_CONN_MAX_LIFETIME,
 	}
 }
-
 
 // Postgres returns a pointer to a sql.DB object and an error.
 //
@@ -85,10 +83,10 @@ func Postgres() (*sql.DB, error) {
 	return pg, err
 }
 
-// PostgresTest is a function that returns a *sql.DB and an error. 
+// PostgresTest is a function that returns a *sql.DB and an error.
 //
 // It initializes a Postgres test database connection and returns the connection and any potential errors that occurred during the process.
-// 
+//
 // Return:
 // - *sql.DB: The Postgres test database connection.
 // - error: Any errors that occurred during the process of initializing the connection.

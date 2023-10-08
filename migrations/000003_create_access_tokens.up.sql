@@ -10,5 +10,5 @@ ALTER TABLE access_tokens
     ADD CONSTRAINT user_id_fk FOREIGN KEY (user_id) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE;
     
 
-CREATE INDEX idx_access_tokens_token ON access_tokens(token);
-CREATE INDEX idx_access_tokens_user_id ON access_tokens(user_id);
+CREATE INDEX access_tokens_token_idx ON access_tokens(token);
+CREATE INDEX access_tokens_user_id_idx ON access_tokens(user_id);

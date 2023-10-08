@@ -4,12 +4,78 @@ package oas
 
 import (
 	"bytes"
+	"mime"
+	"mime/multipart"
 	"net/http"
+	"time"
 
+	"github.com/go-faster/errors"
 	"github.com/go-faster/jx"
 
+	"github.com/ogen-go/ogen/conv"
 	ht "github.com/ogen-go/ogen/http"
+	"github.com/ogen-go/ogen/uri"
 )
+
+func encodeV1AuthLoginRequest(
+	req *V1AuthLoginReq,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := jx.GetEncoder()
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeV1AuthRefreshRequest(
+	req *V1AuthRefreshReq,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := jx.GetEncoder()
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeV1OTPCodeEnterRequest(
+	req *V1OTPCodeEnterReq,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := jx.GetEncoder()
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeV1OTPCodeSendRequest(
+	req *V1OTPCodeSendReq,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := jx.GetEncoder()
+	{
+		if req == nil {
+			e.Null()
+		} else {
+			req.Encode(e)
+		}
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
 
 func encodeV1UsersCreateRequest(
 	req *V1UsersCreateReq,
@@ -29,18 +95,79 @@ func encodeV1UsersMeUpdateRequest(
 	req OptV1UsersMeUpdateReq,
 	r *http.Request,
 ) error {
-	const contentType = "application/json"
+	const contentType = "multipart/form-data"
 	if !req.Set {
 		// Keep request with empty body if value is not set.
 		return nil
 	}
-	e := jx.GetEncoder()
+	request := req.Value
+
+	q := uri.NewQueryEncoder()
 	{
-		if req.Set {
-			req.Encode(e)
+		// Encode "name" form field.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "name",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := request.Name.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return errors.Wrap(err, "encode query")
 		}
 	}
-	encoded := e.Bytes()
-	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	{
+		// Encode "birthday" form field.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "birthday",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := request.Birthday.Get(); ok {
+				if unwrapped := time.Time(val); true {
+					return e.EncodeValue(conv.DateToString(unwrapped))
+				}
+				return nil
+			}
+			return nil
+		}); err != nil {
+			return errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "phone_number" form field.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "phone_number",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := request.PhoneNumber.Get(); ok {
+				if unwrapped := string(val); true {
+					return e.EncodeValue(conv.StringToString(unwrapped))
+				}
+				return nil
+			}
+			return nil
+		}); err != nil {
+			return errors.Wrap(err, "encode query")
+		}
+	}
+	body, boundary := ht.CreateMultipartBody(func(w *multipart.Writer) error {
+		if val, ok := request.Photo.Get(); ok {
+			if err := val.WriteMultipart("photo", w); err != nil {
+				return errors.Wrap(err, "write \"photo\"")
+			}
+		}
+		if err := q.WriteMultipart(w); err != nil {
+			return errors.Wrap(err, "write multipart")
+		}
+		return nil
+	})
+	ht.SetCloserBody(r, body, mime.FormatMediaType(contentType, map[string]string{"boundary": boundary}))
 	return nil
 }

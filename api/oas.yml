@@ -8,13 +8,48 @@ info:
   title: Go API
 
 tags:
-  - name: signup
-    description: Everything related to signup
-
+  - name: auth
+    description: Everything related to authentication
+  - name:  otp
+    description: Everything related to OTP
   - name: users
     description: Everything related to users
 
 paths:
+  /v1/auth/login:
+    post:
+      tags:
+        - auth
+      summary: Returns a new access token with a new expiration date.
+      description: Returns a new access token with a new expiration date.
+      operationId: V1_Auth_login
+      requestBody:
+        $ref: "#/components/requestBodies/V1AuthLoginRequest"
+      responses:
+        '200':
+          $ref: "#/components/responses/V1AuthLoginResponse"
+        '400':
+          $ref: "#/components/responses/V1ErrorResponse"
+        default:
+          $ref: "#/components/responses/V1ErrorResponse"
+
+  /v1/auth/refresh:
+    post:
+      tags:
+        - auth
+      summary: Returns a new access token with a new expiration date.
+      description: Returns a new access token with a new expiration date.
+      operationId: V1_Auth_Refresh
+      requestBody:
+        $ref: "#/components/requestBodies/V1AuthRefreshRequest"
+      responses:
+        '200':
+          $ref: "#/components/responses/V1AuthRefreshResponse"
+        '400':
+          $ref: "#/components/responses/V1ErrorResponse"
+        default:
+          $ref: "#/components/responses/V1ErrorResponse"
+  
   /v1/users:
     post:
       tags:
@@ -26,8 +61,10 @@ paths:
         $ref: "#/components/requestBodies/V1CreateUserRequest"
       responses:
         '200':
-          $ref: "#/components/responses/V1CreateUserResponse"
+          $ref: "#/components/responses/V1AuthLoginResponse"
         '400':
+          $ref: "#/components/responses/V1ErrorResponse"
+        default:
           $ref: "#/components/responses/V1ErrorResponse"
   
   /v1/users/me:
@@ -46,8 +83,13 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/V1User"
+        '401':
+          $ref: "#/components/responses/V1401UnauthorizedResponse"
         '400':
-          $ref: "#/components/responses/V1ErrorResponse"      
+          $ref: "#/components/responses/V1ErrorResponse"
+        default:
+          $ref: "#/components/responses/V1ErrorResponse"
+
     patch:
       tags:
         - users
@@ -67,6 +109,47 @@ paths:
                 $ref: "#/components/schemas/V1User"
         '400':
           $ref: "#/components/responses/V1ErrorResponse"
+        default:
+          $ref: "#/components/responses/V1ErrorResponse"
+
+  /v1/otp/send:
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+        - otp
+      summary: Send a 5 digit OTP code to the phone number associate to the user
+      description: Send a 5 digit OTP code to the phone number associate to the user
+      operationId: V1_OTP_Code_Send
+      requestBody:
+        $ref: "#/components/requestBodies/EmptyRequestBody"
+      responses:
+        '204':
+          description: The OTP code was sent
+        '400':
+          $ref: "#/components/responses/V1ErrorResponse"
+        default:
+          $ref: "#/components/responses/V1ErrorResponse"
+  
+  /v1/otp/enter:
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+        - otp
+      summary: Validates the phone number associated to user based on code.
+      description: Validates the user for the given code.
+      operationId: V1_OTP_Code_Enter
+      requestBody:
+        $ref: "#/components/requestBodies/V1OTPCodeEnterRequest"
+      responses:
+        '204':
+          description: The OTP code was correct
+        '400':
+          $ref: "#/components/responses/V1ErrorResponse"
+        default:
+          $ref: "#/components/responses/V1ErrorResponse" 
+
 
 components:
 
@@ -78,9 +161,63 @@ components:
 
   schemas:
 
+    OTPCode:
+      type: string
+      minLength: 5
+      maxLength: 5
+      example: 12345
+
+    Image:
+      type: string
+      format: uri
+      example: https://george-fx.github.io/apitex/users/01.png
+
+    E164PhoneNumber:
+      type: string
+      pattern: "^\\+[1-9]\\d{1,14}$"
+
     UUID:
       type: string
+      format: uuid
       example: "0c589d81-a70b-4e5d-81e9-4251ab97d2d0"
+
+    Date:
+      type: string
+      format: date
+      pattern: /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/
+      example: "2022-07-01"
+
+
+    V1ErrorMessage:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+
+    V1FieldError:
+      type: object
+      required:
+        - field
+        - messages
+      properties:
+        field:
+          type: string
+        messages:
+          type: array
+          items:
+            type: string
+
+    V1FieldErrors:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/V1FieldError'
 
     V1User:
       type: object
@@ -88,6 +225,9 @@ components:
         - id
         - name
         - email
+        - birthday
+        - phone_number
+        - photo
       properties:
         id:
           $ref: '#/components/schemas/UUID'
@@ -97,6 +237,12 @@ components:
         email:
           type: string
           example: "john@doe.com"
+        birthday:
+          $ref: '#/components/schemas/Date'
+        phone_number:
+          $ref: '#/components/schemas/E164PhoneNumber'
+        photo:
+          $ref: '#/components/schemas/Image'
     
     V1Users:
       type: array
@@ -104,19 +250,7 @@ components:
         $ref: '#/components/schemas/V1User'
   
   responses:
-    V1ErrorResponse:
-      description: Error response
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-              - message
-            properties:
-              message:
-                type: string
-            
-    V1CreateUserResponse:
+    V1AuthLoginResponse:
       description: Response for creating a new user
       content:
         application/json:
@@ -133,19 +267,56 @@ components:
                 $ref: '#/components/schemas/UUID'
               user:
                 $ref: '#/components/schemas/V1User'
-
-  requestBodies:
-    V1UpdateUserRequest:
-      required: false
+    V1AuthRefreshResponse:
+      description: Returns a new access token with a new expiration date.
       content:
         application/json:
           schema:
             type: object
+            required:
+              - access_token
             properties:
-              name:
+              access_token:
+                $ref: '#/components/schemas/UUID'
+        
+    V1401UnauthorizedResponse:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - message
+              - reason
+            properties:
+              message:
+                type: string
+              reason:
                 type: string
 
-    V1CreateUserRequest:
+    V1ErrorResponse:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/V1ErrorMessage'
+              - $ref: '#/components/schemas/V1FieldErrors'
+
+  requestBodies:
+    V1OTPCodeEnterRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - code
+            properties:
+              code:
+                $ref: '#/components/schemas/OTPCode'
+
+    V1AuthLoginRequest:
       required: true
       content:
         application/json:
@@ -161,3 +332,68 @@ components:
                 example: "john@doe.com"
               password:
                 type: string
+                minLength: 8
+                maxLength: 32
+
+    V1AuthRefreshRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - refresh_token
+            properties:
+              refresh_token:
+                $ref: '#/components/schemas/UUID'
+
+    EmptyRequestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            nullable: true
+
+    V1UpdateUserRequest:
+      required: false
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                example: "John Doe"
+              birthday:
+                $ref: '#/components/schemas/Date'
+              photo:
+                type: string
+                format: binary
+              phone_number:
+                $ref: '#/components/schemas/E164PhoneNumber'
+
+                
+    V1CreateUserRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - email
+              - password
+              - name
+            properties:
+              name:
+                type: string
+                example: "John Doe"
+                minLength: 2
+              email:
+                type: string
+                format: email
+                example: "john@doe.com"
+              password:
+                type: string
+                minLength: 8
+                maxLength: 32

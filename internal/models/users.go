@@ -34,6 +34,8 @@ type User struct {
 	LastAuthenticatedAt null.Time   `boil:"last_authenticated_at" json:"last_authenticated_at,omitempty" toml:"last_authenticated_at" yaml:"last_authenticated_at,omitempty"`
 	CreatedAt           time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt           time.Time   `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	Birthday            null.Time   `boil:"birthday" json:"birthday,omitempty" toml:"birthday" yaml:"birthday,omitempty"`
+	Photo               null.String `boil:"photo" json:"photo,omitempty" toml:"photo" yaml:"photo,omitempty"`
 
 	R *userR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -50,6 +52,8 @@ var UserColumns = struct {
 	LastAuthenticatedAt string
 	CreatedAt           string
 	UpdatedAt           string
+	Birthday            string
+	Photo               string
 }{
 	ID:                  "id",
 	Email:               "email",
@@ -61,6 +65,8 @@ var UserColumns = struct {
 	LastAuthenticatedAt: "last_authenticated_at",
 	CreatedAt:           "created_at",
 	UpdatedAt:           "updated_at",
+	Birthday:            "birthday",
+	Photo:               "photo",
 }
 
 var UserTableColumns = struct {
@@ -74,6 +80,8 @@ var UserTableColumns = struct {
 	LastAuthenticatedAt string
 	CreatedAt           string
 	UpdatedAt           string
+	Birthday            string
+	Photo               string
 }{
 	ID:                  "users.id",
 	Email:               "users.email",
@@ -85,6 +93,8 @@ var UserTableColumns = struct {
 	LastAuthenticatedAt: "users.last_authenticated_at",
 	CreatedAt:           "users.created_at",
 	UpdatedAt:           "users.updated_at",
+	Birthday:            "users.birthday",
+	Photo:               "users.photo",
 }
 
 // Generated where
@@ -174,6 +184,8 @@ var UserWhere = struct {
 	LastAuthenticatedAt whereHelpernull_Time
 	CreatedAt           whereHelpertime_Time
 	UpdatedAt           whereHelpertime_Time
+	Birthday            whereHelpernull_Time
+	Photo               whereHelpernull_String
 }{
 	ID:                  whereHelperstring{field: "\"users\".\"id\""},
 	Email:               whereHelperstring{field: "\"users\".\"email\""},
@@ -185,6 +197,8 @@ var UserWhere = struct {
 	LastAuthenticatedAt: whereHelpernull_Time{field: "\"users\".\"last_authenticated_at\""},
 	CreatedAt:           whereHelpertime_Time{field: "\"users\".\"created_at\""},
 	UpdatedAt:           whereHelpertime_Time{field: "\"users\".\"updated_at\""},
+	Birthday:            whereHelpernull_Time{field: "\"users\".\"birthday\""},
+	Photo:               whereHelpernull_String{field: "\"users\".\"photo\""},
 }
 
 // UserRels is where relationship names are stored.
@@ -235,9 +249,9 @@ func (r *userR) GetRefreshTokens() RefreshTokenSlice {
 type userL struct{}
 
 var (
-	userAllColumns            = []string{"id", "email", "password", "name", "is_active", "phone_number", "has_verified_phone", "last_authenticated_at", "created_at", "updated_at"}
+	userAllColumns            = []string{"id", "email", "password", "name", "is_active", "phone_number", "has_verified_phone", "last_authenticated_at", "created_at", "updated_at", "birthday", "photo"}
 	userColumnsWithoutDefault = []string{"email", "password", "is_active", "updated_at"}
-	userColumnsWithDefault    = []string{"id", "name", "phone_number", "has_verified_phone", "last_authenticated_at", "created_at"}
+	userColumnsWithDefault    = []string{"id", "name", "phone_number", "has_verified_phone", "last_authenticated_at", "created_at", "birthday", "photo"}
 	userPrimaryKeyColumns     = []string{"id"}
 	userGeneratedColumns      = []string{}
 )

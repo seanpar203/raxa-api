@@ -8,6 +8,30 @@ import (
 
 // Handler handles operations described by OpenAPI v3 specification.
 type Handler interface {
+	// V1AuthLogin implements V1_Auth_login operation.
+	//
+	// Returns a new access token with a new expiration date.
+	//
+	// POST /v1/auth/login
+	V1AuthLogin(ctx context.Context, req *V1AuthLoginReq) (V1AuthLoginRes, error)
+	// V1AuthRefresh implements V1_Auth_Refresh operation.
+	//
+	// Returns a new access token with a new expiration date.
+	//
+	// POST /v1/auth/refresh
+	V1AuthRefresh(ctx context.Context, req *V1AuthRefreshReq) (V1AuthRefreshRes, error)
+	// V1OTPCodeEnter implements V1_OTP_Code_Enter operation.
+	//
+	// Validates the user for the given code.
+	//
+	// POST /v1/otp/enter
+	V1OTPCodeEnter(ctx context.Context, req *V1OTPCodeEnterReq) (V1OTPCodeEnterRes, error)
+	// V1OTPCodeSend implements V1_OTP_Code_Send operation.
+	//
+	// Send a 5 digit OTP code to the phone number associate to the user.
+	//
+	// POST /v1/otp/send
+	V1OTPCodeSend(ctx context.Context, req *V1OTPCodeSendReq) (V1OTPCodeSendRes, error)
 	// V1UsersCreate implements V1_Users_Create operation.
 	//
 	// Creates and returns a new user.
@@ -26,6 +50,10 @@ type Handler interface {
 	//
 	// PATCH /v1/users/me
 	V1UsersMeUpdate(ctx context.Context, req OptV1UsersMeUpdateReq) (V1UsersMeUpdateRes, error)
+	// NewError creates *V1ErrorResponseStatusCode from error returned by handler.
+	//
+	// Used for common default response.
+	NewError(ctx context.Context, err error) *V1ErrorResponseStatusCode
 }
 
 // Server implements http server based on OpenAPI v3 specification and

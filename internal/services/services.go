@@ -6,7 +6,9 @@ import (
 
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
+	"github.com/seanpar203/go-api/internal/backends"
 	"github.com/seanpar203/go-api/internal/db"
+	"github.com/seanpar203/go-api/internal/env"
 )
 
 var (
@@ -37,6 +39,10 @@ func New(_db *sql.DB) (*Services, error) {
 
 	boil.SetDB(_db)
 
+	if env.APP_ENV == "dev" {
+		boil.DebugMode = true
+	}
+
 	return &Services{
 		User:         userSvc,
 		AccessToken:  accessTokenSvc,
@@ -45,7 +51,9 @@ func New(_db *sql.DB) (*Services, error) {
 }
 
 func init() {
-	userSvc = &user{}
+	userSvc = &user{
+		fb: backends.GetFileBackend(),
+	}
 	accessTokenSvc = &accessToken{}
 	refreshTokenSvc = &refreshToken{}
 }

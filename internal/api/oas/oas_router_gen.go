@@ -43,43 +43,151 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		switch elem[0] {
-		case '/': // Prefix: "/v1/users"
-			if l := len("/v1/users"); len(elem) >= l && elem[0:l] == "/v1/users" {
+		case '/': // Prefix: "/v1/"
+			if l := len("/v1/"); len(elem) >= l && elem[0:l] == "/v1/" {
 				elem = elem[l:]
 			} else {
 				break
 			}
 
 			if len(elem) == 0 {
-				switch r.Method {
-				case "POST":
-					s.handleV1UsersCreateRequest([0]string{}, elemIsEscaped, w, r)
-				default:
-					s.notAllowed(w, r, "POST")
-				}
-
-				return
+				break
 			}
 			switch elem[0] {
-			case '/': // Prefix: "/me"
-				if l := len("/me"); len(elem) >= l && elem[0:l] == "/me" {
+			case 'a': // Prefix: "auth/"
+				if l := len("auth/"); len(elem) >= l && elem[0:l] == "auth/" {
 					elem = elem[l:]
 				} else {
 					break
 				}
 
 				if len(elem) == 0 {
-					// Leaf node.
+					break
+				}
+				switch elem[0] {
+				case 'l': // Prefix: "login"
+					if l := len("login"); len(elem) >= l && elem[0:l] == "login" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "POST":
+							s.handleV1AuthLoginRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "POST")
+						}
+
+						return
+					}
+				case 'r': // Prefix: "refresh"
+					if l := len("refresh"); len(elem) >= l && elem[0:l] == "refresh" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "POST":
+							s.handleV1AuthRefreshRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "POST")
+						}
+
+						return
+					}
+				}
+			case 'o': // Prefix: "otp/"
+				if l := len("otp/"); len(elem) >= l && elem[0:l] == "otp/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case 'e': // Prefix: "enter"
+					if l := len("enter"); len(elem) >= l && elem[0:l] == "enter" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "POST":
+							s.handleV1OTPCodeEnterRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "POST")
+						}
+
+						return
+					}
+				case 's': // Prefix: "send"
+					if l := len("send"); len(elem) >= l && elem[0:l] == "send" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "POST":
+							s.handleV1OTPCodeSendRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "POST")
+						}
+
+						return
+					}
+				}
+			case 'u': // Prefix: "users"
+				if l := len("users"); len(elem) >= l && elem[0:l] == "users" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
 					switch r.Method {
-					case "GET":
-						s.handleV1UsersMeRequest([0]string{}, elemIsEscaped, w, r)
-					case "PATCH":
-						s.handleV1UsersMeUpdateRequest([0]string{}, elemIsEscaped, w, r)
+					case "POST":
+						s.handleV1UsersCreateRequest([0]string{}, elemIsEscaped, w, r)
 					default:
-						s.notAllowed(w, r, "GET,PATCH")
+						s.notAllowed(w, r, "POST")
 					}
 
 					return
+				}
+				switch elem[0] {
+				case '/': // Prefix: "/me"
+					if l := len("/me"); len(elem) >= l && elem[0:l] == "/me" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "GET":
+							s.handleV1UsersMeRequest([0]string{}, elemIsEscaped, w, r)
+						case "PATCH":
+							s.handleV1UsersMeUpdateRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET,PATCH")
+						}
+
+						return
+					}
 				}
 			}
 		}
@@ -151,29 +259,127 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 			break
 		}
 		switch elem[0] {
-		case '/': // Prefix: "/v1/users"
-			if l := len("/v1/users"); len(elem) >= l && elem[0:l] == "/v1/users" {
+		case '/': // Prefix: "/v1/"
+			if l := len("/v1/"); len(elem) >= l && elem[0:l] == "/v1/" {
 				elem = elem[l:]
 			} else {
 				break
 			}
 
 			if len(elem) == 0 {
-				switch method {
-				case "POST":
-					r.name = "V1UsersCreate"
-					r.operationID = "V1_Users_Create"
-					r.pathPattern = "/v1/users"
-					r.args = args
-					r.count = 0
-					return r, true
-				default:
-					return
-				}
+				break
 			}
 			switch elem[0] {
-			case '/': // Prefix: "/me"
-				if l := len("/me"); len(elem) >= l && elem[0:l] == "/me" {
+			case 'a': // Prefix: "auth/"
+				if l := len("auth/"); len(elem) >= l && elem[0:l] == "auth/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case 'l': // Prefix: "login"
+					if l := len("login"); len(elem) >= l && elem[0:l] == "login" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						switch method {
+						case "POST":
+							// Leaf: V1AuthLogin
+							r.name = "V1AuthLogin"
+							r.operationID = "V1_Auth_login"
+							r.pathPattern = "/v1/auth/login"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
+					}
+				case 'r': // Prefix: "refresh"
+					if l := len("refresh"); len(elem) >= l && elem[0:l] == "refresh" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						switch method {
+						case "POST":
+							// Leaf: V1AuthRefresh
+							r.name = "V1AuthRefresh"
+							r.operationID = "V1_Auth_Refresh"
+							r.pathPattern = "/v1/auth/refresh"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
+					}
+				}
+			case 'o': // Prefix: "otp/"
+				if l := len("otp/"); len(elem) >= l && elem[0:l] == "otp/" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case 'e': // Prefix: "enter"
+					if l := len("enter"); len(elem) >= l && elem[0:l] == "enter" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						switch method {
+						case "POST":
+							// Leaf: V1OTPCodeEnter
+							r.name = "V1OTPCodeEnter"
+							r.operationID = "V1_OTP_Code_Enter"
+							r.pathPattern = "/v1/otp/enter"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
+					}
+				case 's': // Prefix: "send"
+					if l := len("send"); len(elem) >= l && elem[0:l] == "send" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						switch method {
+						case "POST":
+							// Leaf: V1OTPCodeSend
+							r.name = "V1OTPCodeSend"
+							r.operationID = "V1_OTP_Code_Send"
+							r.pathPattern = "/v1/otp/send"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
+					}
+				}
+			case 'u': // Prefix: "users"
+				if l := len("users"); len(elem) >= l && elem[0:l] == "users" {
 					elem = elem[l:]
 				} else {
 					break
@@ -181,24 +387,46 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 
 				if len(elem) == 0 {
 					switch method {
-					case "GET":
-						// Leaf: V1UsersMe
-						r.name = "V1UsersMe"
-						r.operationID = "V1_Users_Me"
-						r.pathPattern = "/v1/users/me"
-						r.args = args
-						r.count = 0
-						return r, true
-					case "PATCH":
-						// Leaf: V1UsersMeUpdate
-						r.name = "V1UsersMeUpdate"
-						r.operationID = "V1_Users_Me_Update"
-						r.pathPattern = "/v1/users/me"
+					case "POST":
+						r.name = "V1UsersCreate"
+						r.operationID = "V1_Users_Create"
+						r.pathPattern = "/v1/users"
 						r.args = args
 						r.count = 0
 						return r, true
 					default:
 						return
+					}
+				}
+				switch elem[0] {
+				case '/': // Prefix: "/me"
+					if l := len("/me"); len(elem) >= l && elem[0:l] == "/me" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						switch method {
+						case "GET":
+							// Leaf: V1UsersMe
+							r.name = "V1UsersMe"
+							r.operationID = "V1_Users_Me"
+							r.pathPattern = "/v1/users/me"
+							r.args = args
+							r.count = 0
+							return r, true
+						case "PATCH":
+							// Leaf: V1UsersMeUpdate
+							r.name = "V1UsersMeUpdate"
+							r.operationID = "V1_Users_Me_Update"
+							r.pathPattern = "/v1/users/me"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
 					}
 				}
 			}

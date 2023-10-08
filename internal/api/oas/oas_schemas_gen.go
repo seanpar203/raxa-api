@@ -2,6 +2,20 @@
 
 package oas
 
+import (
+	"fmt"
+	"net/url"
+	"time"
+
+	"github.com/google/uuid"
+
+	ht "github.com/ogen-go/ogen/http"
+)
+
+func (s *V1ErrorResponseStatusCode) Error() string {
+	return fmt.Sprintf("code %d: %+v", s.StatusCode, s.Response)
+}
+
 type BearerAuth struct {
 	Token string
 }
@@ -14,6 +28,152 @@ func (s *BearerAuth) GetToken() string {
 // SetToken sets the value of Token.
 func (s *BearerAuth) SetToken(val string) {
 	s.Token = val
+}
+
+type Date time.Time
+
+type E164PhoneNumber string
+
+type Image url.URL
+
+type OTPCode string
+
+// NewOptDate returns new OptDate with value set to v.
+func NewOptDate(v Date) OptDate {
+	return OptDate{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptDate is optional Date.
+type OptDate struct {
+	Value Date
+	Set   bool
+}
+
+// IsSet returns true if OptDate was set.
+func (o OptDate) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptDate) Reset() {
+	var v Date
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptDate) SetTo(v Date) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptDate) Get() (v Date, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptDate) Or(d Date) Date {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptE164PhoneNumber returns new OptE164PhoneNumber with value set to v.
+func NewOptE164PhoneNumber(v E164PhoneNumber) OptE164PhoneNumber {
+	return OptE164PhoneNumber{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptE164PhoneNumber is optional E164PhoneNumber.
+type OptE164PhoneNumber struct {
+	Value E164PhoneNumber
+	Set   bool
+}
+
+// IsSet returns true if OptE164PhoneNumber was set.
+func (o OptE164PhoneNumber) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptE164PhoneNumber) Reset() {
+	var v E164PhoneNumber
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptE164PhoneNumber) SetTo(v E164PhoneNumber) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptE164PhoneNumber) Get() (v E164PhoneNumber, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptE164PhoneNumber) Or(d E164PhoneNumber) E164PhoneNumber {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptMultipartFile returns new OptMultipartFile with value set to v.
+func NewOptMultipartFile(v ht.MultipartFile) OptMultipartFile {
+	return OptMultipartFile{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptMultipartFile is optional ht.MultipartFile.
+type OptMultipartFile struct {
+	Value ht.MultipartFile
+	Set   bool
+}
+
+// IsSet returns true if OptMultipartFile was set.
+func (o OptMultipartFile) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptMultipartFile) Reset() {
+	var v ht.MultipartFile
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptMultipartFile) SetTo(v ht.MultipartFile) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptMultipartFile) Get() (v ht.MultipartFile, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptMultipartFile) Or(d ht.MultipartFile) ht.MultipartFile {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
 }
 
 // NewOptString returns new OptString with value set to v.
@@ -108,69 +268,317 @@ func (o OptV1UsersMeUpdateReq) Or(d V1UsersMeUpdateReq) V1UsersMeUpdateReq {
 	return d
 }
 
-type UUID string
+type UUID uuid.UUID
 
-type V1CreateUserResponse struct {
+type V1401UnauthorizedResponse struct {
+	Message string `json:"message"`
+	Reason  string `json:"reason"`
+}
+
+// GetMessage returns the value of Message.
+func (s *V1401UnauthorizedResponse) GetMessage() string {
+	return s.Message
+}
+
+// GetReason returns the value of Reason.
+func (s *V1401UnauthorizedResponse) GetReason() string {
+	return s.Reason
+}
+
+// SetMessage sets the value of Message.
+func (s *V1401UnauthorizedResponse) SetMessage(val string) {
+	s.Message = val
+}
+
+// SetReason sets the value of Reason.
+func (s *V1401UnauthorizedResponse) SetReason(val string) {
+	s.Reason = val
+}
+
+func (*V1401UnauthorizedResponse) v1UsersMeRes() {}
+
+type V1AuthLoginReq struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+// GetEmail returns the value of Email.
+func (s *V1AuthLoginReq) GetEmail() string {
+	return s.Email
+}
+
+// GetPassword returns the value of Password.
+func (s *V1AuthLoginReq) GetPassword() string {
+	return s.Password
+}
+
+// SetEmail sets the value of Email.
+func (s *V1AuthLoginReq) SetEmail(val string) {
+	s.Email = val
+}
+
+// SetPassword sets the value of Password.
+func (s *V1AuthLoginReq) SetPassword(val string) {
+	s.Password = val
+}
+
+type V1AuthLoginResponse struct {
 	AccessToken  UUID   `json:"access_token"`
 	RefreshToken UUID   `json:"refresh_token"`
 	User         V1User `json:"user"`
 }
 
 // GetAccessToken returns the value of AccessToken.
-func (s *V1CreateUserResponse) GetAccessToken() UUID {
+func (s *V1AuthLoginResponse) GetAccessToken() UUID {
 	return s.AccessToken
 }
 
 // GetRefreshToken returns the value of RefreshToken.
-func (s *V1CreateUserResponse) GetRefreshToken() UUID {
+func (s *V1AuthLoginResponse) GetRefreshToken() UUID {
 	return s.RefreshToken
 }
 
 // GetUser returns the value of User.
-func (s *V1CreateUserResponse) GetUser() V1User {
+func (s *V1AuthLoginResponse) GetUser() V1User {
 	return s.User
 }
 
 // SetAccessToken sets the value of AccessToken.
-func (s *V1CreateUserResponse) SetAccessToken(val UUID) {
+func (s *V1AuthLoginResponse) SetAccessToken(val UUID) {
 	s.AccessToken = val
 }
 
 // SetRefreshToken sets the value of RefreshToken.
-func (s *V1CreateUserResponse) SetRefreshToken(val UUID) {
+func (s *V1AuthLoginResponse) SetRefreshToken(val UUID) {
 	s.RefreshToken = val
 }
 
 // SetUser sets the value of User.
-func (s *V1CreateUserResponse) SetUser(val V1User) {
+func (s *V1AuthLoginResponse) SetUser(val V1User) {
 	s.User = val
 }
 
-func (*V1CreateUserResponse) v1UsersCreateRes() {}
+func (*V1AuthLoginResponse) v1AuthLoginRes()   {}
+func (*V1AuthLoginResponse) v1UsersCreateRes() {}
 
-type V1ErrorResponse struct {
+type V1AuthRefreshReq struct {
+	RefreshToken UUID `json:"refresh_token"`
+}
+
+// GetRefreshToken returns the value of RefreshToken.
+func (s *V1AuthRefreshReq) GetRefreshToken() UUID {
+	return s.RefreshToken
+}
+
+// SetRefreshToken sets the value of RefreshToken.
+func (s *V1AuthRefreshReq) SetRefreshToken(val UUID) {
+	s.RefreshToken = val
+}
+
+type V1AuthRefreshResponse struct {
+	AccessToken UUID `json:"access_token"`
+}
+
+// GetAccessToken returns the value of AccessToken.
+func (s *V1AuthRefreshResponse) GetAccessToken() UUID {
+	return s.AccessToken
+}
+
+// SetAccessToken sets the value of AccessToken.
+func (s *V1AuthRefreshResponse) SetAccessToken(val UUID) {
+	s.AccessToken = val
+}
+
+func (*V1AuthRefreshResponse) v1AuthRefreshRes() {}
+
+// Ref: #/components/schemas/V1ErrorMessage
+type V1ErrorMessage struct {
 	Message string `json:"message"`
 }
 
 // GetMessage returns the value of Message.
-func (s *V1ErrorResponse) GetMessage() string {
+func (s *V1ErrorMessage) GetMessage() string {
 	return s.Message
 }
 
 // SetMessage sets the value of Message.
-func (s *V1ErrorResponse) SetMessage(val string) {
+func (s *V1ErrorMessage) SetMessage(val string) {
 	s.Message = val
 }
 
-func (*V1ErrorResponse) v1UsersCreateRes()   {}
-func (*V1ErrorResponse) v1UsersMeRes()       {}
-func (*V1ErrorResponse) v1UsersMeUpdateRes() {}
+// V1ErrorResponse represents sum type.
+type V1ErrorResponse struct {
+	Type           V1ErrorResponseType // switch on this field
+	V1ErrorMessage V1ErrorMessage
+	V1FieldErrors  V1FieldErrors
+}
+
+// V1ErrorResponseType is oneOf type of V1ErrorResponse.
+type V1ErrorResponseType string
+
+// Possible values for V1ErrorResponseType.
+const (
+	V1ErrorMessageV1ErrorResponse V1ErrorResponseType = "V1ErrorMessage"
+	V1FieldErrorsV1ErrorResponse  V1ErrorResponseType = "V1FieldErrors"
+)
+
+// IsV1ErrorMessage reports whether V1ErrorResponse is V1ErrorMessage.
+func (s V1ErrorResponse) IsV1ErrorMessage() bool { return s.Type == V1ErrorMessageV1ErrorResponse }
+
+// IsV1FieldErrors reports whether V1ErrorResponse is V1FieldErrors.
+func (s V1ErrorResponse) IsV1FieldErrors() bool { return s.Type == V1FieldErrorsV1ErrorResponse }
+
+// SetV1ErrorMessage sets V1ErrorResponse to V1ErrorMessage.
+func (s *V1ErrorResponse) SetV1ErrorMessage(v V1ErrorMessage) {
+	s.Type = V1ErrorMessageV1ErrorResponse
+	s.V1ErrorMessage = v
+}
+
+// GetV1ErrorMessage returns V1ErrorMessage and true boolean if V1ErrorResponse is V1ErrorMessage.
+func (s V1ErrorResponse) GetV1ErrorMessage() (v V1ErrorMessage, ok bool) {
+	if !s.IsV1ErrorMessage() {
+		return v, false
+	}
+	return s.V1ErrorMessage, true
+}
+
+// NewV1ErrorMessageV1ErrorResponse returns new V1ErrorResponse from V1ErrorMessage.
+func NewV1ErrorMessageV1ErrorResponse(v V1ErrorMessage) V1ErrorResponse {
+	var s V1ErrorResponse
+	s.SetV1ErrorMessage(v)
+	return s
+}
+
+// SetV1FieldErrors sets V1ErrorResponse to V1FieldErrors.
+func (s *V1ErrorResponse) SetV1FieldErrors(v V1FieldErrors) {
+	s.Type = V1FieldErrorsV1ErrorResponse
+	s.V1FieldErrors = v
+}
+
+// GetV1FieldErrors returns V1FieldErrors and true boolean if V1ErrorResponse is V1FieldErrors.
+func (s V1ErrorResponse) GetV1FieldErrors() (v V1FieldErrors, ok bool) {
+	if !s.IsV1FieldErrors() {
+		return v, false
+	}
+	return s.V1FieldErrors, true
+}
+
+// NewV1FieldErrorsV1ErrorResponse returns new V1ErrorResponse from V1FieldErrors.
+func NewV1FieldErrorsV1ErrorResponse(v V1FieldErrors) V1ErrorResponse {
+	var s V1ErrorResponse
+	s.SetV1FieldErrors(v)
+	return s
+}
+
+// V1ErrorResponseStatusCode wraps V1ErrorResponse with StatusCode.
+type V1ErrorResponseStatusCode struct {
+	StatusCode int
+	Response   V1ErrorResponse
+}
+
+// GetStatusCode returns the value of StatusCode.
+func (s *V1ErrorResponseStatusCode) GetStatusCode() int {
+	return s.StatusCode
+}
+
+// GetResponse returns the value of Response.
+func (s *V1ErrorResponseStatusCode) GetResponse() V1ErrorResponse {
+	return s.Response
+}
+
+// SetStatusCode sets the value of StatusCode.
+func (s *V1ErrorResponseStatusCode) SetStatusCode(val int) {
+	s.StatusCode = val
+}
+
+// SetResponse sets the value of Response.
+func (s *V1ErrorResponseStatusCode) SetResponse(val V1ErrorResponse) {
+	s.Response = val
+}
+
+func (*V1ErrorResponseStatusCode) v1AuthLoginRes()     {}
+func (*V1ErrorResponseStatusCode) v1AuthRefreshRes()   {}
+func (*V1ErrorResponseStatusCode) v1OTPCodeEnterRes()  {}
+func (*V1ErrorResponseStatusCode) v1OTPCodeSendRes()   {}
+func (*V1ErrorResponseStatusCode) v1UsersCreateRes()   {}
+func (*V1ErrorResponseStatusCode) v1UsersMeRes()       {}
+func (*V1ErrorResponseStatusCode) v1UsersMeUpdateRes() {}
+
+// Ref: #/components/schemas/V1FieldError
+type V1FieldError struct {
+	Field    string   `json:"field"`
+	Messages []string `json:"messages"`
+}
+
+// GetField returns the value of Field.
+func (s *V1FieldError) GetField() string {
+	return s.Field
+}
+
+// GetMessages returns the value of Messages.
+func (s *V1FieldError) GetMessages() []string {
+	return s.Messages
+}
+
+// SetField sets the value of Field.
+func (s *V1FieldError) SetField(val string) {
+	s.Field = val
+}
+
+// SetMessages sets the value of Messages.
+func (s *V1FieldError) SetMessages(val []string) {
+	s.Messages = val
+}
+
+// Ref: #/components/schemas/V1FieldErrors
+type V1FieldErrors struct {
+	Errors []V1FieldError `json:"errors"`
+}
+
+// GetErrors returns the value of Errors.
+func (s *V1FieldErrors) GetErrors() []V1FieldError {
+	return s.Errors
+}
+
+// SetErrors sets the value of Errors.
+func (s *V1FieldErrors) SetErrors(val []V1FieldError) {
+	s.Errors = val
+}
+
+// V1OTPCodeEnterNoContent is response for V1OTPCodeEnter operation.
+type V1OTPCodeEnterNoContent struct{}
+
+func (*V1OTPCodeEnterNoContent) v1OTPCodeEnterRes() {}
+
+type V1OTPCodeEnterReq struct {
+	Code OTPCode `json:"code"`
+}
+
+// GetCode returns the value of Code.
+func (s *V1OTPCodeEnterReq) GetCode() OTPCode {
+	return s.Code
+}
+
+// SetCode sets the value of Code.
+func (s *V1OTPCodeEnterReq) SetCode(val OTPCode) {
+	s.Code = val
+}
+
+// V1OTPCodeSendNoContent is response for V1OTPCodeSend operation.
+type V1OTPCodeSendNoContent struct{}
+
+func (*V1OTPCodeSendNoContent) v1OTPCodeSendRes() {}
+
+type V1OTPCodeSendReq struct{}
 
 // Ref: #/components/schemas/V1User
 type V1User struct {
-	ID    UUID   `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	ID          UUID            `json:"id"`
+	Name        string          `json:"name"`
+	Email       string          `json:"email"`
+	Birthday    Date            `json:"birthday"`
+	PhoneNumber E164PhoneNumber `json:"phone_number"`
+	Photo       Image           `json:"photo"`
 }
 
 // GetID returns the value of ID.
@@ -188,6 +596,21 @@ func (s *V1User) GetEmail() string {
 	return s.Email
 }
 
+// GetBirthday returns the value of Birthday.
+func (s *V1User) GetBirthday() Date {
+	return s.Birthday
+}
+
+// GetPhoneNumber returns the value of PhoneNumber.
+func (s *V1User) GetPhoneNumber() E164PhoneNumber {
+	return s.PhoneNumber
+}
+
+// GetPhoto returns the value of Photo.
+func (s *V1User) GetPhoto() Image {
+	return s.Photo
+}
+
 // SetID sets the value of ID.
 func (s *V1User) SetID(val UUID) {
 	s.ID = val
@@ -203,12 +626,33 @@ func (s *V1User) SetEmail(val string) {
 	s.Email = val
 }
 
+// SetBirthday sets the value of Birthday.
+func (s *V1User) SetBirthday(val Date) {
+	s.Birthday = val
+}
+
+// SetPhoneNumber sets the value of PhoneNumber.
+func (s *V1User) SetPhoneNumber(val E164PhoneNumber) {
+	s.PhoneNumber = val
+}
+
+// SetPhoto sets the value of Photo.
+func (s *V1User) SetPhoto(val Image) {
+	s.Photo = val
+}
+
 func (*V1User) v1UsersMeRes()       {}
 func (*V1User) v1UsersMeUpdateRes() {}
 
 type V1UsersCreateReq struct {
+	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+// GetName returns the value of Name.
+func (s *V1UsersCreateReq) GetName() string {
+	return s.Name
 }
 
 // GetEmail returns the value of Email.
@@ -219,6 +663,11 @@ func (s *V1UsersCreateReq) GetEmail() string {
 // GetPassword returns the value of Password.
 func (s *V1UsersCreateReq) GetPassword() string {
 	return s.Password
+}
+
+// SetName sets the value of Name.
+func (s *V1UsersCreateReq) SetName(val string) {
+	s.Name = val
 }
 
 // SetEmail sets the value of Email.
@@ -232,7 +681,10 @@ func (s *V1UsersCreateReq) SetPassword(val string) {
 }
 
 type V1UsersMeUpdateReq struct {
-	Name OptString `json:"name"`
+	Name        OptString          `json:"name"`
+	Birthday    OptDate            `json:"birthday"`
+	Photo       OptMultipartFile   `json:"photo"`
+	PhoneNumber OptE164PhoneNumber `json:"phone_number"`
 }
 
 // GetName returns the value of Name.
@@ -240,7 +692,37 @@ func (s *V1UsersMeUpdateReq) GetName() OptString {
 	return s.Name
 }
 
+// GetBirthday returns the value of Birthday.
+func (s *V1UsersMeUpdateReq) GetBirthday() OptDate {
+	return s.Birthday
+}
+
+// GetPhoto returns the value of Photo.
+func (s *V1UsersMeUpdateReq) GetPhoto() OptMultipartFile {
+	return s.Photo
+}
+
+// GetPhoneNumber returns the value of PhoneNumber.
+func (s *V1UsersMeUpdateReq) GetPhoneNumber() OptE164PhoneNumber {
+	return s.PhoneNumber
+}
+
 // SetName sets the value of Name.
 func (s *V1UsersMeUpdateReq) SetName(val OptString) {
 	s.Name = val
+}
+
+// SetBirthday sets the value of Birthday.
+func (s *V1UsersMeUpdateReq) SetBirthday(val OptDate) {
+	s.Birthday = val
+}
+
+// SetPhoto sets the value of Photo.
+func (s *V1UsersMeUpdateReq) SetPhoto(val OptMultipartFile) {
+	s.Photo = val
+}
+
+// SetPhoneNumber sets the value of PhoneNumber.
+func (s *V1UsersMeUpdateReq) SetPhoneNumber(val OptE164PhoneNumber) {
+	s.PhoneNumber = val
 }

@@ -1,5 +1,8 @@
 up:
 	docker compose up -d
+
+fmt:
+	go fmt ./...
 	
 gen:
 	go generate

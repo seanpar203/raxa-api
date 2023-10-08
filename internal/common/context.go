@@ -10,6 +10,7 @@ import (
 )
 
 type ctxUserKey struct{}
+type ctxLoggerKey struct{}
 
 // UserFromContext retrieves the User object from the given context.
 //

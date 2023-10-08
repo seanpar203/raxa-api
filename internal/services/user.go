@@ -2,14 +2,23 @@ package services
 
 import (
 	"context"
+	"fmt"
+	"io"
 
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
+	"github.com/seanpar203/go-api/internal/backends"
 	"github.com/seanpar203/go-api/internal/common"
 	"github.com/seanpar203/go-api/internal/models"
 )
 
-type user struct{}
+var userBlacklistColumns = boil.Blacklist("id", "password")
+
+type user struct {
+	fb  backends.FileBackend
+	otp backends.OTPBackend
+}
 
 // CreateUser creates a new user with the given email and password.
 //
@@ -64,13 +73,30 @@ func (svc *user) CreateUser(ctx context.Context, email string, password string) 
 // ctx: the context.Context to be used for the database operation.
 // user: the user model to be updated.
 // Returns the updated user model and an error, if any.
-func (svc *user) UpdateUser(ctx context.Context, u *models.User) (*models.User, error) {
+func (svc *user) UpdateUser(ctx context.Context, user *models.User) (*models.User, error) {
 
-	if _, err := u.UpdateG(ctx, boil.Blacklist("id", "password")); err != nil {
-		return u, ErrrUnableToUpdateUser
+	if _, err := user.UpdateG(ctx, userBlacklistColumns); err != nil {
+		return user, ErrrUnableToUpdateUser
 	}
 
-	return u, nil
+	return user, nil
+}
+
+// Sets the photo of the user and returns the full qualified URL path.
+func (svc *user) SetPhoto(ctx context.Context, user *models.User, file io.Reader, name string) (*models.User, error) {
+	path := fmt.Sprintf("/users/%s/photos/%s", user.ID, common.UniqueFileName(name))
+
+	if err := svc.fb.Save(ctx, file, path); err != nil {
+		return user, err
+	}
+
+	user.Photo = null.StringFrom(path)
+
+	if _, err := user.UpdateG(ctx, userBlacklistColumns); err != nil {
+		return user, err
+	}
+
+	return user, nil
 }
 
 func (svc *user) GetByEmail(ctx context.Context, email string) (*models.User, error) {
@@ -89,6 +115,22 @@ func (svc *user) GetUserFromAccessToken(ctx context.Context, token string) (*mod
 	}
 
 	return at.R.User, nil
+}
+
+// GetUserFromRefreshToken retrieves a user from a refresh token.
+//
+// ctx is the context to carry deadlines, cancelation signals, and other request-scoped values across API boundaries and between processes.
+// token is the refresh token used to retrieve the user.
+// *models.User is the user retrieved from the refresh token.
+// error is any error that occurred while retrieving the user.
+func (svc *user) GetUserFromRefreshToken(ctx context.Context, token string) (*models.User, error) {
+	rt, err := refreshTokenSvc.GetByToken(ctx, token)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return rt.R.User, nil
 }
 
 // DoesEmailExist checks if the given email exists in the database.

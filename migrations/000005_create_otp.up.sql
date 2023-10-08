@@ -12,4 +12,5 @@ CREATE TABLE IF NOT EXISTS otp(
 ALTER TABLE otp
     ADD CONSTRAINT user_id_fk FOREIGN KEY (user_id) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
-CREATE INDEX idx_otp_user_id ON refresh_tokens(user_id);
+CREATE INDEX otp_user_id_idx 
+    ON refresh_tokens(user_id);
