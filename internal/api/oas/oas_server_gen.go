@@ -44,6 +44,12 @@ type Handler interface {
 	//
 	// GET /v1/users/me
 	V1UsersMe(ctx context.Context) (V1UsersMeRes, error)
+	// V1UsersMeContactsCreate implements v1_Users_Me_Contacts_Create operation.
+	//
+	// Creates contacts for the current logged in user OR future.
+	//
+	// POST /v1/users/me/contacts
+	V1UsersMeContactsCreate(ctx context.Context, req Contacts) (V1UsersMeContactsCreateRes, error)
 	// V1UsersMeUpdate implements V1_Users_Me_Update operation.
 	//
 	// Updates the current user.

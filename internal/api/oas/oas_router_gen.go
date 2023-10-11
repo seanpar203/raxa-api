@@ -176,7 +176,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					}
 
 					if len(elem) == 0 {
-						// Leaf node.
 						switch r.Method {
 						case "GET":
 							s.handleV1UsersMeRequest([0]string{}, elemIsEscaped, w, r)
@@ -187,6 +186,26 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						}
 
 						return
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/contacts"
+						if l := len("/contacts"); len(elem) >= l && elem[0:l] == "/contacts" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "POST":
+								s.handleV1UsersMeContactsCreateRequest([0]string{}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "POST")
+							}
+
+							return
+						}
 					}
 				}
 			}
@@ -409,7 +428,6 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					if len(elem) == 0 {
 						switch method {
 						case "GET":
-							// Leaf: V1UsersMe
 							r.name = "V1UsersMe"
 							r.operationID = "V1_Users_Me"
 							r.pathPattern = "/v1/users/me"
@@ -417,7 +435,6 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							r.count = 0
 							return r, true
 						case "PATCH":
-							// Leaf: V1UsersMeUpdate
 							r.name = "V1UsersMeUpdate"
 							r.operationID = "V1_Users_Me_Update"
 							r.pathPattern = "/v1/users/me"
@@ -426,6 +443,29 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							return r, true
 						default:
 							return
+						}
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/contacts"
+						if l := len("/contacts"); len(elem) >= l && elem[0:l] == "/contacts" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							switch method {
+							case "POST":
+								// Leaf: V1UsersMeContactsCreate
+								r.name = "V1UsersMeContactsCreate"
+								r.operationID = "v1_Users_Me_Contacts_Create"
+								r.pathPattern = "/v1/users/me/contacts"
+								r.args = args
+								r.count = 0
+								return r, true
+							default:
+								return
+							}
 						}
 					}
 				}

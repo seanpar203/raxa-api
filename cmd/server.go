@@ -38,7 +38,7 @@ var serverCmd = &cobra.Command{
 		if err != nil {
 			log.Panic().Msg(err.Error())
 		}
-		
+
 		mux := http.NewServeMux()
 
 		mux.Handle("/v1/", svc)

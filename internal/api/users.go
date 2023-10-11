@@ -108,3 +108,12 @@ func (api *API) V1UsersMeUpdate(ctx context.Context, req oas.OptV1UsersMeUpdateR
 
 	return V1User(user), nil
 }
+
+// V1UsersMeContactsCreate implements v1_Users_Me_Contacts_Create operation.
+//
+// Creates contacts for the current logged in user OR future.
+//
+// POST /v1/users/me/contacts
+func (api *API) V1UsersMeContactsCreate(ctx context.Context, req oas.Contacts) (oas.V1UsersMeContactsCreateRes, error) {
+	return &oas.V1UsersMeContactsCreateNoContent{}, nil
+}

@@ -9,10 +9,12 @@ var TableNames = struct {
 	RefreshTokens    string
 	SchemaMigrations string
 	Users            string
+	UsersContacts    string
 }{
 	AccessTokens:     "access_tokens",
 	Otp:              "otp",
 	RefreshTokens:    "refresh_tokens",
 	SchemaMigrations: "schema_migrations",
 	Users:            "users",
+	UsersContacts:    "users_contacts",
 }

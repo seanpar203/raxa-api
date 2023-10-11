@@ -67,6 +67,15 @@ func (UnimplementedHandler) V1UsersMe(ctx context.Context) (r V1UsersMeRes, _ er
 	return r, ht.ErrNotImplemented
 }
 
+// V1UsersMeContactsCreate implements v1_Users_Me_Contacts_Create operation.
+//
+// Creates contacts for the current logged in user OR future.
+//
+// POST /v1/users/me/contacts
+func (UnimplementedHandler) V1UsersMeContactsCreate(ctx context.Context, req Contacts) (r V1UsersMeContactsCreateRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // V1UsersMeUpdate implements V1_Users_Me_Update operation.
 //
 // Updates the current user.

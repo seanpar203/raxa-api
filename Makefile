@@ -8,7 +8,7 @@ gen:
 	go generate
 
 runserver:
-	go run main.go server
+	go run main.go server --migrate
 
 migration:
 	@migrate create -ext sql -dir migrations -seq $(filter-out $@,$(MAKECMDGOALS))

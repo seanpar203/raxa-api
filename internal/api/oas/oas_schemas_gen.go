@@ -30,6 +30,34 @@ func (s *BearerAuth) SetToken(val string) {
 	s.Token = val
 }
 
+// Ref: #/components/schemas/Contact
+type Contact struct {
+	Email       OptNilString       `json:"email"`
+	PhoneNumber OptE164PhoneNumber `json:"phone_number"`
+}
+
+// GetEmail returns the value of Email.
+func (s *Contact) GetEmail() OptNilString {
+	return s.Email
+}
+
+// GetPhoneNumber returns the value of PhoneNumber.
+func (s *Contact) GetPhoneNumber() OptE164PhoneNumber {
+	return s.PhoneNumber
+}
+
+// SetEmail sets the value of Email.
+func (s *Contact) SetEmail(val OptNilString) {
+	s.Email = val
+}
+
+// SetPhoneNumber sets the value of PhoneNumber.
+func (s *Contact) SetPhoneNumber(val OptE164PhoneNumber) {
+	s.PhoneNumber = val
+}
+
+type Contacts []Contact
+
 type Date time.Time
 
 type E164PhoneNumber string
@@ -170,6 +198,69 @@ func (o OptMultipartFile) Get() (v ht.MultipartFile, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptMultipartFile) Or(d ht.MultipartFile) ht.MultipartFile {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptNilString returns new OptNilString with value set to v.
+func NewOptNilString(v string) OptNilString {
+	return OptNilString{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptNilString is optional nullable string.
+type OptNilString struct {
+	Value string
+	Set   bool
+	Null  bool
+}
+
+// IsSet returns true if OptNilString was set.
+func (o OptNilString) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptNilString) Reset() {
+	var v string
+	o.Value = v
+	o.Set = false
+	o.Null = false
+}
+
+// SetTo sets value to v.
+func (o *OptNilString) SetTo(v string) {
+	o.Set = true
+	o.Null = false
+	o.Value = v
+}
+
+// IsSet returns true if value is Null.
+func (o OptNilString) IsNull() bool { return o.Null }
+
+// SetNull sets value to null.
+func (o *OptNilString) SetToNull() {
+	o.Set = true
+	o.Null = true
+	var v string
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptNilString) Get() (v string, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptNilString) Or(d string) string {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -496,13 +587,14 @@ func (s *V1ErrorResponseStatusCode) SetResponse(val V1ErrorResponse) {
 	s.Response = val
 }
 
-func (*V1ErrorResponseStatusCode) v1AuthLoginRes()     {}
-func (*V1ErrorResponseStatusCode) v1AuthRefreshRes()   {}
-func (*V1ErrorResponseStatusCode) v1OTPCodeEnterRes()  {}
-func (*V1ErrorResponseStatusCode) v1OTPCodeSendRes()   {}
-func (*V1ErrorResponseStatusCode) v1UsersCreateRes()   {}
-func (*V1ErrorResponseStatusCode) v1UsersMeRes()       {}
-func (*V1ErrorResponseStatusCode) v1UsersMeUpdateRes() {}
+func (*V1ErrorResponseStatusCode) v1AuthLoginRes()             {}
+func (*V1ErrorResponseStatusCode) v1AuthRefreshRes()           {}
+func (*V1ErrorResponseStatusCode) v1OTPCodeEnterRes()          {}
+func (*V1ErrorResponseStatusCode) v1OTPCodeSendRes()           {}
+func (*V1ErrorResponseStatusCode) v1UsersCreateRes()           {}
+func (*V1ErrorResponseStatusCode) v1UsersMeContactsCreateRes() {}
+func (*V1ErrorResponseStatusCode) v1UsersMeRes()               {}
+func (*V1ErrorResponseStatusCode) v1UsersMeUpdateRes()         {}
 
 // Ref: #/components/schemas/V1FieldError
 type V1FieldError struct {
@@ -679,6 +771,11 @@ func (s *V1UsersCreateReq) SetEmail(val string) {
 func (s *V1UsersCreateReq) SetPassword(val string) {
 	s.Password = val
 }
+
+// V1UsersMeContactsCreateNoContent is response for V1UsersMeContactsCreate operation.
+type V1UsersMeContactsCreateNoContent struct{}
+
+func (*V1UsersMeContactsCreateNoContent) v1UsersMeContactsCreateRes() {}
 
 type V1UsersMeUpdateReq struct {
 	Name        OptString          `json:"name"`

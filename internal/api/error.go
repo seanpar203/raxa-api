@@ -72,7 +72,7 @@ func ErrorHandler(ctx context.Context, w http.ResponseWriter, r *http.Request, e
 		res := V1FieldErrors(ve)
 		res.Encode(enc)
 	} else {
-		logger.Info().Msg("Not a validation error")
+		logger.Err(err).Msg("Not a validation error")
 	}
 
 	if _, err := enc.WriteTo(w); err != nil {

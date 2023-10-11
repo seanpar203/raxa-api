@@ -206,10 +206,14 @@ var UserRels = struct {
 	AccessTokens  string
 	Otps          string
 	RefreshTokens string
+	Users         string
+	ContactUsers  string
 }{
 	AccessTokens:  "AccessTokens",
 	Otps:          "Otps",
 	RefreshTokens: "RefreshTokens",
+	Users:         "Users",
+	ContactUsers:  "ContactUsers",
 }
 
 // userR is where relationships are stored.
@@ -217,6 +221,8 @@ type userR struct {
 	AccessTokens  AccessTokenSlice  `boil:"AccessTokens" json:"AccessTokens" toml:"AccessTokens" yaml:"AccessTokens"`
 	Otps          OtpSlice          `boil:"Otps" json:"Otps" toml:"Otps" yaml:"Otps"`
 	RefreshTokens RefreshTokenSlice `boil:"RefreshTokens" json:"RefreshTokens" toml:"RefreshTokens" yaml:"RefreshTokens"`
+	Users         UserSlice         `boil:"Users" json:"Users" toml:"Users" yaml:"Users"`
+	ContactUsers  UserSlice         `boil:"ContactUsers" json:"ContactUsers" toml:"ContactUsers" yaml:"ContactUsers"`
 }
 
 // NewStruct creates a new relationship struct
@@ -243,6 +249,20 @@ func (r *userR) GetRefreshTokens() RefreshTokenSlice {
 		return nil
 	}
 	return r.RefreshTokens
+}
+
+func (r *userR) GetUsers() UserSlice {
+	if r == nil {
+		return nil
+	}
+	return r.Users
+}
+
+func (r *userR) GetContactUsers() UserSlice {
+	if r == nil {
+		return nil
+	}
+	return r.ContactUsers
 }
 
 // userL is where Load methods for each relationship are stored.
@@ -596,6 +616,36 @@ func (o *User) RefreshTokens(mods ...qm.QueryMod) refreshTokenQuery {
 	return RefreshTokens(queryMods...)
 }
 
+// Users retrieves all the user's Users with an executor.
+func (o *User) Users(mods ...qm.QueryMod) userQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.InnerJoin("\"users_contacts\" on \"users\".\"id\" = \"users_contacts\".\"user_id\""),
+		qm.Where("\"users_contacts\".\"contact_id\"=?", o.ID),
+	)
+
+	return Users(queryMods...)
+}
+
+// ContactUsers retrieves all the user's Users with an executor via id column.
+func (o *User) ContactUsers(mods ...qm.QueryMod) userQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.InnerJoin("\"users_contacts\" on \"users\".\"id\" = \"users_contacts\".\"contact_id\""),
+		qm.Where("\"users_contacts\".\"user_id\"=?", o.ID),
+	)
+
+	return Users(queryMods...)
+}
+
 // LoadAccessTokens allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for a 1-M or N-M relationship.
 func (userL) LoadAccessTokens(ctx context.Context, e boil.ContextExecutor, singular bool, maybeUser interface{}, mods queries.Applicator) error {
@@ -938,6 +988,268 @@ func (userL) LoadRefreshTokens(ctx context.Context, e boil.ContextExecutor, sing
 	return nil
 }
 
+// LoadUsers allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (userL) LoadUsers(ctx context.Context, e boil.ContextExecutor, singular bool, maybeUser interface{}, mods queries.Applicator) error {
+	var slice []*User
+	var object *User
+
+	if singular {
+		var ok bool
+		object, ok = maybeUser.(*User)
+		if !ok {
+			object = new(User)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeUser)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeUser))
+			}
+		}
+	} else {
+		s, ok := maybeUser.(*[]*User)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeUser)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeUser))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &userR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &userR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.Select("\"users\".\"id\", \"users\".\"email\", \"users\".\"password\", \"users\".\"name\", \"users\".\"is_active\", \"users\".\"phone_number\", \"users\".\"has_verified_phone\", \"users\".\"last_authenticated_at\", \"users\".\"created_at\", \"users\".\"updated_at\", \"users\".\"birthday\", \"users\".\"photo\", \"a\".\"contact_id\""),
+		qm.From("\"users\""),
+		qm.InnerJoin("\"users_contacts\" as \"a\" on \"users\".\"id\" = \"a\".\"user_id\""),
+		qm.WhereIn("\"a\".\"contact_id\" in ?", args...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load users")
+	}
+
+	var resultSlice []*User
+
+	var localJoinCols []string
+	for results.Next() {
+		one := new(User)
+		var localJoinCol string
+
+		err = results.Scan(&one.ID, &one.Email, &one.Password, &one.Name, &one.IsActive, &one.PhoneNumber, &one.HasVerifiedPhone, &one.LastAuthenticatedAt, &one.CreatedAt, &one.UpdatedAt, &one.Birthday, &one.Photo, &localJoinCol)
+		if err != nil {
+			return errors.Wrap(err, "failed to scan eager loaded results for users")
+		}
+		if err = results.Err(); err != nil {
+			return errors.Wrap(err, "failed to plebian-bind eager loaded slice users")
+		}
+
+		resultSlice = append(resultSlice, one)
+		localJoinCols = append(localJoinCols, localJoinCol)
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on users")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for users")
+	}
+
+	if len(userAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.Users = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &userR{}
+			}
+			foreign.R.ContactUsers = append(foreign.R.ContactUsers, object)
+		}
+		return nil
+	}
+
+	for i, foreign := range resultSlice {
+		localJoinCol := localJoinCols[i]
+		for _, local := range slice {
+			if local.ID == localJoinCol {
+				local.R.Users = append(local.R.Users, foreign)
+				if foreign.R == nil {
+					foreign.R = &userR{}
+				}
+				foreign.R.ContactUsers = append(foreign.R.ContactUsers, local)
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadContactUsers allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (userL) LoadContactUsers(ctx context.Context, e boil.ContextExecutor, singular bool, maybeUser interface{}, mods queries.Applicator) error {
+	var slice []*User
+	var object *User
+
+	if singular {
+		var ok bool
+		object, ok = maybeUser.(*User)
+		if !ok {
+			object = new(User)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeUser)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeUser))
+			}
+		}
+	} else {
+		s, ok := maybeUser.(*[]*User)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeUser)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeUser))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &userR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &userR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.Select("\"users\".\"id\", \"users\".\"email\", \"users\".\"password\", \"users\".\"name\", \"users\".\"is_active\", \"users\".\"phone_number\", \"users\".\"has_verified_phone\", \"users\".\"last_authenticated_at\", \"users\".\"created_at\", \"users\".\"updated_at\", \"users\".\"birthday\", \"users\".\"photo\", \"a\".\"user_id\""),
+		qm.From("\"users\""),
+		qm.InnerJoin("\"users_contacts\" as \"a\" on \"users\".\"id\" = \"a\".\"contact_id\""),
+		qm.WhereIn("\"a\".\"user_id\" in ?", args...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load users")
+	}
+
+	var resultSlice []*User
+
+	var localJoinCols []string
+	for results.Next() {
+		one := new(User)
+		var localJoinCol string
+
+		err = results.Scan(&one.ID, &one.Email, &one.Password, &one.Name, &one.IsActive, &one.PhoneNumber, &one.HasVerifiedPhone, &one.LastAuthenticatedAt, &one.CreatedAt, &one.UpdatedAt, &one.Birthday, &one.Photo, &localJoinCol)
+		if err != nil {
+			return errors.Wrap(err, "failed to scan eager loaded results for users")
+		}
+		if err = results.Err(); err != nil {
+			return errors.Wrap(err, "failed to plebian-bind eager loaded slice users")
+		}
+
+		resultSlice = append(resultSlice, one)
+		localJoinCols = append(localJoinCols, localJoinCol)
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on users")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for users")
+	}
+
+	if len(userAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.ContactUsers = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &userR{}
+			}
+			foreign.R.Users = append(foreign.R.Users, object)
+		}
+		return nil
+	}
+
+	for i, foreign := range resultSlice {
+		localJoinCol := localJoinCols[i]
+		for _, local := range slice {
+			if local.ID == localJoinCol {
+				local.R.ContactUsers = append(local.R.ContactUsers, foreign)
+				if foreign.R == nil {
+					foreign.R = &userR{}
+				}
+				foreign.R.Users = append(foreign.R.Users, local)
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
 // AddAccessTokensG adds the given related objects to the existing relationships
 // of the user, optionally inserting them as new records.
 // Appends related to o.R.AccessTokens.
@@ -1122,6 +1434,352 @@ func (o *User) AddRefreshTokens(ctx context.Context, exec boil.ContextExecutor, 
 		}
 	}
 	return nil
+}
+
+// AddUsersG adds the given related objects to the existing relationships
+// of the user, optionally inserting them as new records.
+// Appends related to o.R.Users.
+// Sets related.R.ContactUsers appropriately.
+// Uses the global database handle.
+func (o *User) AddUsersG(ctx context.Context, insert bool, related ...*User) error {
+	return o.AddUsers(ctx, boil.GetContextDB(), insert, related...)
+}
+
+// AddUsers adds the given related objects to the existing relationships
+// of the user, optionally inserting them as new records.
+// Appends related to o.R.Users.
+// Sets related.R.ContactUsers appropriately.
+func (o *User) AddUsers(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*User) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		}
+	}
+
+	for _, rel := range related {
+		query := "insert into \"users_contacts\" (\"contact_id\", \"user_id\") values ($1, $2)"
+		values := []interface{}{o.ID, rel.ID}
+
+		if boil.IsDebug(ctx) {
+			writer := boil.DebugWriterFrom(ctx)
+			fmt.Fprintln(writer, query)
+			fmt.Fprintln(writer, values)
+		}
+		_, err = exec.ExecContext(ctx, query, values...)
+		if err != nil {
+			return errors.Wrap(err, "failed to insert into join table")
+		}
+	}
+	if o.R == nil {
+		o.R = &userR{
+			Users: related,
+		}
+	} else {
+		o.R.Users = append(o.R.Users, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &userR{
+				ContactUsers: UserSlice{o},
+			}
+		} else {
+			rel.R.ContactUsers = append(rel.R.ContactUsers, o)
+		}
+	}
+	return nil
+}
+
+// SetUsersG removes all previously related items of the
+// user replacing them completely with the passed
+// in related items, optionally inserting them as new records.
+// Sets o.R.ContactUsers's Users accordingly.
+// Replaces o.R.Users with related.
+// Sets related.R.ContactUsers's Users accordingly.
+// Uses the global database handle.
+func (o *User) SetUsersG(ctx context.Context, insert bool, related ...*User) error {
+	return o.SetUsers(ctx, boil.GetContextDB(), insert, related...)
+}
+
+// SetUsers removes all previously related items of the
+// user replacing them completely with the passed
+// in related items, optionally inserting them as new records.
+// Sets o.R.ContactUsers's Users accordingly.
+// Replaces o.R.Users with related.
+// Sets related.R.ContactUsers's Users accordingly.
+func (o *User) SetUsers(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*User) error {
+	query := "delete from \"users_contacts\" where \"contact_id\" = $1"
+	values := []interface{}{o.ID}
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, query)
+		fmt.Fprintln(writer, values)
+	}
+	_, err := exec.ExecContext(ctx, query, values...)
+	if err != nil {
+		return errors.Wrap(err, "failed to remove relationships before set")
+	}
+
+	removeUsersFromContactUsersSlice(o, related)
+	if o.R != nil {
+		o.R.Users = nil
+	}
+
+	return o.AddUsers(ctx, exec, insert, related...)
+}
+
+// RemoveUsersG relationships from objects passed in.
+// Removes related items from R.Users (uses pointer comparison, removal does not keep order)
+// Sets related.R.ContactUsers.
+// Uses the global database handle.
+func (o *User) RemoveUsersG(ctx context.Context, related ...*User) error {
+	return o.RemoveUsers(ctx, boil.GetContextDB(), related...)
+}
+
+// RemoveUsers relationships from objects passed in.
+// Removes related items from R.Users (uses pointer comparison, removal does not keep order)
+// Sets related.R.ContactUsers.
+func (o *User) RemoveUsers(ctx context.Context, exec boil.ContextExecutor, related ...*User) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	query := fmt.Sprintf(
+		"delete from \"users_contacts\" where \"contact_id\" = $1 and \"user_id\" in (%s)",
+		strmangle.Placeholders(dialect.UseIndexPlaceholders, len(related), 2, 1),
+	)
+	values := []interface{}{o.ID}
+	for _, rel := range related {
+		values = append(values, rel.ID)
+	}
+
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, query)
+		fmt.Fprintln(writer, values)
+	}
+	_, err = exec.ExecContext(ctx, query, values...)
+	if err != nil {
+		return errors.Wrap(err, "failed to remove relationships before set")
+	}
+	removeUsersFromContactUsersSlice(o, related)
+	if o.R == nil {
+		return nil
+	}
+
+	for _, rel := range related {
+		for i, ri := range o.R.Users {
+			if rel != ri {
+				continue
+			}
+
+			ln := len(o.R.Users)
+			if ln > 1 && i < ln-1 {
+				o.R.Users[i] = o.R.Users[ln-1]
+			}
+			o.R.Users = o.R.Users[:ln-1]
+			break
+		}
+	}
+
+	return nil
+}
+
+func removeUsersFromContactUsersSlice(o *User, related []*User) {
+	for _, rel := range related {
+		if rel.R == nil {
+			continue
+		}
+		for i, ri := range rel.R.ContactUsers {
+			if o.ID != ri.ID {
+				continue
+			}
+
+			ln := len(rel.R.ContactUsers)
+			if ln > 1 && i < ln-1 {
+				rel.R.ContactUsers[i] = rel.R.ContactUsers[ln-1]
+			}
+			rel.R.ContactUsers = rel.R.ContactUsers[:ln-1]
+			break
+		}
+	}
+}
+
+// AddContactUsersG adds the given related objects to the existing relationships
+// of the user, optionally inserting them as new records.
+// Appends related to o.R.ContactUsers.
+// Sets related.R.Users appropriately.
+// Uses the global database handle.
+func (o *User) AddContactUsersG(ctx context.Context, insert bool, related ...*User) error {
+	return o.AddContactUsers(ctx, boil.GetContextDB(), insert, related...)
+}
+
+// AddContactUsers adds the given related objects to the existing relationships
+// of the user, optionally inserting them as new records.
+// Appends related to o.R.ContactUsers.
+// Sets related.R.Users appropriately.
+func (o *User) AddContactUsers(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*User) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		}
+	}
+
+	for _, rel := range related {
+		query := "insert into \"users_contacts\" (\"user_id\", \"contact_id\") values ($1, $2)"
+		values := []interface{}{o.ID, rel.ID}
+
+		if boil.IsDebug(ctx) {
+			writer := boil.DebugWriterFrom(ctx)
+			fmt.Fprintln(writer, query)
+			fmt.Fprintln(writer, values)
+		}
+		_, err = exec.ExecContext(ctx, query, values...)
+		if err != nil {
+			return errors.Wrap(err, "failed to insert into join table")
+		}
+	}
+	if o.R == nil {
+		o.R = &userR{
+			ContactUsers: related,
+		}
+	} else {
+		o.R.ContactUsers = append(o.R.ContactUsers, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &userR{
+				Users: UserSlice{o},
+			}
+		} else {
+			rel.R.Users = append(rel.R.Users, o)
+		}
+	}
+	return nil
+}
+
+// SetContactUsersG removes all previously related items of the
+// user replacing them completely with the passed
+// in related items, optionally inserting them as new records.
+// Sets o.R.Users's ContactUsers accordingly.
+// Replaces o.R.ContactUsers with related.
+// Sets related.R.Users's ContactUsers accordingly.
+// Uses the global database handle.
+func (o *User) SetContactUsersG(ctx context.Context, insert bool, related ...*User) error {
+	return o.SetContactUsers(ctx, boil.GetContextDB(), insert, related...)
+}
+
+// SetContactUsers removes all previously related items of the
+// user replacing them completely with the passed
+// in related items, optionally inserting them as new records.
+// Sets o.R.Users's ContactUsers accordingly.
+// Replaces o.R.ContactUsers with related.
+// Sets related.R.Users's ContactUsers accordingly.
+func (o *User) SetContactUsers(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*User) error {
+	query := "delete from \"users_contacts\" where \"user_id\" = $1"
+	values := []interface{}{o.ID}
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, query)
+		fmt.Fprintln(writer, values)
+	}
+	_, err := exec.ExecContext(ctx, query, values...)
+	if err != nil {
+		return errors.Wrap(err, "failed to remove relationships before set")
+	}
+
+	removeContactUsersFromUsersSlice(o, related)
+	if o.R != nil {
+		o.R.ContactUsers = nil
+	}
+
+	return o.AddContactUsers(ctx, exec, insert, related...)
+}
+
+// RemoveContactUsersG relationships from objects passed in.
+// Removes related items from R.ContactUsers (uses pointer comparison, removal does not keep order)
+// Sets related.R.Users.
+// Uses the global database handle.
+func (o *User) RemoveContactUsersG(ctx context.Context, related ...*User) error {
+	return o.RemoveContactUsers(ctx, boil.GetContextDB(), related...)
+}
+
+// RemoveContactUsers relationships from objects passed in.
+// Removes related items from R.ContactUsers (uses pointer comparison, removal does not keep order)
+// Sets related.R.Users.
+func (o *User) RemoveContactUsers(ctx context.Context, exec boil.ContextExecutor, related ...*User) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	query := fmt.Sprintf(
+		"delete from \"users_contacts\" where \"user_id\" = $1 and \"contact_id\" in (%s)",
+		strmangle.Placeholders(dialect.UseIndexPlaceholders, len(related), 2, 1),
+	)
+	values := []interface{}{o.ID}
+	for _, rel := range related {
+		values = append(values, rel.ID)
+	}
+
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, query)
+		fmt.Fprintln(writer, values)
+	}
+	_, err = exec.ExecContext(ctx, query, values...)
+	if err != nil {
+		return errors.Wrap(err, "failed to remove relationships before set")
+	}
+	removeContactUsersFromUsersSlice(o, related)
+	if o.R == nil {
+		return nil
+	}
+
+	for _, rel := range related {
+		for i, ri := range o.R.ContactUsers {
+			if rel != ri {
+				continue
+			}
+
+			ln := len(o.R.ContactUsers)
+			if ln > 1 && i < ln-1 {
+				o.R.ContactUsers[i] = o.R.ContactUsers[ln-1]
+			}
+			o.R.ContactUsers = o.R.ContactUsers[:ln-1]
+			break
+		}
+	}
+
+	return nil
+}
+
+func removeContactUsersFromUsersSlice(o *User, related []*User) {
+	for _, rel := range related {
+		if rel.R == nil {
+			continue
+		}
+		for i, ri := range rel.R.Users {
+			if o.ID != ri.ID {
+				continue
+			}
+
+			ln := len(rel.R.Users)
+			if ln > 1 && i < ln-1 {
+				rel.R.Users[i] = rel.R.Users[ln-1]
+			}
+			rel.R.Users = rel.R.Users[:ln-1]
+			break
+		}
+	}
 }
 
 // Users retrieves all the records using an executor.

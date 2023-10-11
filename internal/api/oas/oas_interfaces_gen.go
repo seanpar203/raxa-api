@@ -21,6 +21,10 @@ type V1UsersCreateRes interface {
 	v1UsersCreateRes()
 }
 
+type V1UsersMeContactsCreateRes interface {
+	v1UsersMeContactsCreateRes()
+}
+
 type V1UsersMeRes interface {
 	v1UsersMeRes()
 }
